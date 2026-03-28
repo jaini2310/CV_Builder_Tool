@@ -9,7 +9,7 @@ from cv_generator import generate_pdf
 from llm_service import extract_structured_cv, get_next_question, transcribe_audio
 from schema import CVSchema
 
-st.set_page_config(page_title="NTT AI CV Dashboard", layout="wide")
+st.set_page_config(page_title="NTT DATA AI CV Dashboard", layout="wide")
 
 LOGO_CANDIDATES = [
     Path("assets/ntt_data_logo.png"),
@@ -39,40 +39,46 @@ def inject_styles():
         }
         .stApp {
             background:
-                radial-gradient(circle at 0% 0%, rgba(0, 116, 200, 0.16), transparent 22%),
-                radial-gradient(circle at 100% 0%, rgba(20, 199, 176, 0.12), transparent 20%),
+                radial-gradient(circle at 0% 0%, rgba(0, 116, 200, 0.1), transparent 20%),
+                radial-gradient(circle at 100% 0%, rgba(20, 199, 176, 0.08), transparent 18%),
                 linear-gradient(180deg, #ffffff 0%, #f7fbff 50%, #f2f8ff 100%);
-            background-size: 120% 120%;
-            animation: pageFloat 16s ease-in-out infinite;
+        }
+        header[data-testid="stHeader"] {
+            display: none;
+        }
+        div[data-testid="stToolbar"] {
+            display: none;
+        }
+        div[data-testid="stDecoration"] {
+            display: none;
+        }
+        div[data-testid="stAppViewContainer"] {
+            padding-top: 0 !important;
         }
         .stApp::before {
             content: "";
             position: fixed;
             inset: -20% -10% auto auto;
-            width: 420px;
-            height: 420px;
+            width: 300px;
+            height: 300px;
             border-radius: 999px;
-            background: radial-gradient(circle, rgba(37, 99, 235, 0.14) 0%, rgba(37, 99, 235, 0) 70%);
-            filter: blur(6px);
+            background: radial-gradient(circle, rgba(37, 99, 235, 0.08) 0%, rgba(37, 99, 235, 0) 70%);
             pointer-events: none;
-            animation: blobDrift 18s ease-in-out infinite;
             z-index: 0;
         }
         .stApp::after {
             content: "";
             position: fixed;
             inset: auto auto -14% -10%;
-            width: 460px;
-            height: 460px;
+            width: 320px;
+            height: 320px;
             border-radius: 999px;
-            background: radial-gradient(circle, rgba(15, 118, 110, 0.16) 0%, rgba(15, 118, 110, 0) 72%);
-            filter: blur(10px);
+            background: radial-gradient(circle, rgba(15, 118, 110, 0.09) 0%, rgba(15, 118, 110, 0) 72%);
             pointer-events: none;
-            animation: blobDriftAlt 22s ease-in-out infinite;
             z-index: 0;
         }
         .block-container {
-            padding-top: 1.6rem;
+            padding-top: 0 !important;
             padding-bottom: 2rem;
             max-width: 1380px;
             position: relative;
@@ -83,17 +89,80 @@ def inject_styles():
             border: 1px solid var(--line);
             border-radius: 30px;
             padding: 1.45rem 1.5rem;
-            box-shadow: var(--shadow);
+            box-shadow: 0 16px 36px rgba(7, 20, 42, 0.06);
             margin-bottom: 1rem;
-            backdrop-filter: blur(18px);
+        }
+        .topbar-shell {
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 1rem;
+            padding: 0.95rem 1.4rem;
+            margin-bottom: 0.7rem;
+            background: linear-gradient(90deg, #0a72c8 0%, #1583d8 58%, #1f96e8 100%);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 24px;
+            box-shadow: 0 16px 36px rgba(0, 88, 153, 0.14);
+        }
+        .topbar-left {
+            display: flex;
+            align-items: center;
+            justify-content: flex-start;
+            flex: 0 0 auto;
+        }
+        .topbar-center {
+            position: absolute;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-width: 0;
+            text-align: center;
+        }
+        .topbar-spacer {
+            flex: 0 0 178px;
+        }
+        .topbar-logo-wrap {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0.5rem 0.7rem;
+            border-radius: 18px;
+            background: rgba(255, 255, 255, 0.96);
+            box-shadow: 0 12px 26px rgba(7, 20, 42, 0.12);
+        }
+        .topbar-logo-wrap .hero-logo {
+            width: 178px;
+        }
+        .topbar-title {
+            font-size: 1.18rem;
+            font-weight: 800;
+            letter-spacing: 0.01em;
+            text-align: center;
+        }
+        .topbar-title .topbar-title-soft {
+            color: #ffffff;
+        }
+        .topbar-title .topbar-title-accent {
+            color: #d8f1ff;
+        }
+        .topbar-subtitle {
+            color: rgba(255, 255, 255);
+            font-size: 0.9rem;
+            margin-top: 0.14rem;
+            margin-left: 25px;
+            text-align: center;
         }
         .hero-shell {
             position: relative;
             overflow: hidden;
+            padding: 2rem 2rem 1.8rem 2rem;
             background:
-                radial-gradient(circle at top right, rgba(0, 116, 200, 0.22), transparent 28%),
-                radial-gradient(circle at bottom left, rgba(20, 199, 176, 0.12), transparent 24%),
-                linear-gradient(135deg, rgba(255, 255, 255, 0.995) 0%, rgba(239, 250, 255, 0.96) 45%, rgba(238, 255, 248, 0.95) 100%);
+                radial-gradient(circle at 88% 18%, rgba(17, 185, 164, 0.26), transparent 20%),
+                radial-gradient(circle at 12% 78%, rgba(0, 116, 200, 0.18), transparent 24%),
+                linear-gradient(135deg, #07142a 0%, #081a38 42%, #0d2750 100%);
         }
         .hero-shell::before {
             content: "";
@@ -104,28 +173,20 @@ def inject_styles():
             right: -80px;
             border-radius: 999px;
             background: radial-gradient(circle, rgba(37, 99, 235, 0.18) 0%, rgba(37, 99, 235, 0) 72%);
-            animation: haloPulse 8s ease-in-out infinite;
         }
         .hero-shell::after {
             content: "";
             position: absolute;
             inset: 0;
-            background-image: linear-gradient(rgba(148, 163, 184, 0.06) 1px, transparent 1px),
-                              linear-gradient(90deg, rgba(148, 163, 184, 0.06) 1px, transparent 1px);
-            background-size: 28px 28px;
-            opacity: 0.35;
+            background-image: linear-gradient(rgba(255, 255, 255, 0.04) 1px, transparent 1px),
+                              linear-gradient(90deg, rgba(255, 255, 255, 0.04) 1px, transparent 1px);
+            background-size: 30px 30px;
+            opacity: 0.26;
             pointer-events: none;
         }
         .hero-content {
             position: relative;
             z-index: 1;
-        }
-        .hero-brand {
-            display: flex;
-            align-items: center;
-            gap: 1.1rem;
-            margin-bottom: 1.15rem;
-            flex-wrap: wrap;
         }
         .hero-logo {
             width: 250px;
@@ -133,39 +194,14 @@ def inject_styles():
             height: auto;
             display: block;
         }
-        .hero-brand-copy {
-            display: flex;
-            flex-direction: column;
-            gap: 0.1rem;
-        }
-        .hero-brand-title {
-            color: #0f172a;
-            font-size: 1.35rem;
-            font-weight: 800;
-            letter-spacing: -0.01em;
-        }
-        .hero-brand-pill {
+        .hero-kicker {
             display: inline-flex;
             align-items: center;
-            padding: 0.42rem 0.86rem;
+            padding: 0.42rem 0.78rem;
             border-radius: 999px;
-            background: linear-gradient(135deg, rgba(0, 116, 200, 0.12), rgba(20, 199, 176, 0.12));
-            border: 1px solid rgba(0, 116, 200, 0.14);
-            color: #075985;
-            font-size: 0.82rem;
-            font-weight: 700;
-            letter-spacing: 0.04em;
-            text-transform: uppercase;
-            width: fit-content;
-        }
-        .hero-badge {
-            display: inline-flex;
-            align-items: center;
-            gap: 0.45rem;
-            padding: 0.4rem 0.8rem;
-            border-radius: 999px;
-            background: linear-gradient(135deg, rgba(0, 116, 200, 0.12), rgba(20, 199, 176, 0.1));
-            color: #066799;
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: #f4fbff;
             font-size: 0.8rem;
             font-weight: 700;
             letter-spacing: 0.03em;
@@ -173,30 +209,51 @@ def inject_styles():
             margin-bottom: 0.85rem;
         }
         .hero-title {
-            display: inline-block;
-            width: fit-content;
-            max-width: 100%;
-            font-size: 3rem;
-            line-height: 1.02;
+            max-width: 900px;
+            font-size: 3.15rem;
+            line-height: 1.04;
             font-weight: 700;
             color: transparent;
-            background: linear-gradient(90deg, #04172d 0%, #005da8 30%, #11b9a4 58%, #005da8 82%, #04172d 100%);
+            background: linear-gradient(90deg, #ffffff 0%, #cfe8ff 34%, #7edfe0 62%, #ffffff 100%);
             background-size: 220% 100%;
             background-position: 0% 50%;
             -webkit-background-clip: text;
             background-clip: text;
-            margin-bottom: 0.7rem;
-            letter-spacing: -0.025em;
-            animation: shimmerText 8s ease-in-out infinite alternate;
-            text-shadow: 0 2px 10px rgba(0, 116, 200, 0.05);
+            margin-bottom: 0.9rem;
+            letter-spacing: -0.03em;
+        }
+        .hero-title .hero-title-soft {
+            color: #ffffff;
+            background: none;
+            -webkit-text-fill-color: #ffffff;
+        }
+        .hero-title .hero-title-tail {
+            color: transparent;
+            background: linear-gradient(90deg, #b8e3ff 0%, #59c6ff 46%, #1d97e8 100%);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .hero-title .hero-title-accent {
+            color: transparent;
+            background: linear-gradient(90deg, #b8e3ff 0%, #59c6ff 46%, #1d97e8 100%);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
         }
         .hero-copy {
-            color: #3f536b;
+            color: rgba(247, 251, 255, 0.94);
             margin-bottom: 1.1rem;
-            max-width: 760px;
+            max-width: 820px;
             font-size: 1.05rem;
-            line-height: 1.72;
-            animation: fadeRise 0.9s ease-out both;
+            line-height: 1.74;
+        }
+        .hero-copy .hero-copy-soft {
+            color: rgba(255, 255, 255, 0.96);
+        }
+        .hero-copy .hero-copy-accent {
+            color: #8bd4ff;
+            font-weight: 600;
         }
         .hero-meta {
             display: flex;
@@ -208,18 +265,11 @@ def inject_styles():
             align-items: center;
             padding: 0.5rem 0.92rem;
             border-radius: 999px;
-            background: linear-gradient(145deg, rgba(255, 255, 255, 0.92), rgba(240, 249, 255, 0.86));
-            border: 1px solid rgba(125, 150, 182, 0.12);
-            color: #36546f;
+            background: rgba(255, 255, 255, 0.09);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            color: #f3f8fe;
             font-size: 0.84rem;
             font-weight: 700;
-            animation: fadeRise 1.05s ease-out both;
-        }
-        .hero-pill:nth-child(2) {
-            animation-delay: 0.08s;
-        }
-        .hero-pill:nth-child(3) {
-            animation-delay: 0.16s;
         }
         .metric-card {
             position: relative;
@@ -235,7 +285,7 @@ def inject_styles():
             border-radius: 999px;
             right: -16px;
             top: -16px;
-            background: linear-gradient(135deg, rgba(0, 116, 200, 0.18), rgba(24, 183, 160, 0.12));
+            background: linear-gradient(135deg, rgba(8, 26, 56, 0.22), rgba(13, 39, 80, 0.34));
         }
         .metric-card::after {
             content: "";
@@ -252,7 +302,7 @@ def inject_styles():
             padding: 0.32rem 0.68rem;
             border-radius: 999px;
             background: rgba(0, 116, 200, 0.08);
-            color: var(--accent);
+            color: var(--brand);
             font-size: 0.76rem;
             font-weight: 700;
             text-transform: uppercase;
@@ -284,7 +334,6 @@ def inject_styles():
             border: 1px solid rgba(125, 150, 182, 0.16);
             background: linear-gradient(145deg, rgba(255, 255, 255, 0.97), rgba(240, 249, 255, 0.9));
             box-shadow: 0 24px 56px rgba(12, 35, 64, 0.1);
-            backdrop-filter: blur(18px);
         }
         .app-loader-spinner {
             width: 56px;
@@ -338,7 +387,6 @@ def inject_styles():
             border-radius: 24px !important;
             background: linear-gradient(155deg, rgba(255,255,255,0.9), rgba(244,250,255,0.82)) !important;
             box-shadow: var(--shadow) !important;
-            backdrop-filter: blur(18px);
         }
         div[data-testid="stChatMessage"] {
             background: linear-gradient(145deg, rgba(255, 255, 255, 0.95), rgba(240, 248, 255, 0.84));
@@ -407,7 +455,7 @@ def inject_styles():
             border-radius: 18px !important;
             border-color: rgba(125, 150, 182, 0.2) !important;
             background: linear-gradient(145deg, rgba(255, 255, 255, 0.94), rgba(243, 250, 255, 0.88)) !important;
-            box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.95);
+            box-shadow: none !important;
         }
         div[data-baseweb="input"] input,
         div[data-baseweb="textarea"] textarea {
@@ -439,33 +487,36 @@ def inject_styles():
             border-color: #0b8a5b;
             color: #ffffff;
         }
-        @keyframes pageFloat {
-            0% { background-position: 0% 0%; }
-            50% { background-position: 50% 25%; }
-            100% { background-position: 0% 0%; }
-        }
-        @keyframes blobDrift {
-            0% { transform: translate3d(0, 0, 0) scale(1); }
-            50% { transform: translate3d(-30px, 20px, 0) scale(1.08); }
-            100% { transform: translate3d(0, 0, 0) scale(1); }
-        }
-        @keyframes blobDriftAlt {
-            0% { transform: translate3d(0, 0, 0) scale(1); }
-            50% { transform: translate3d(24px, -18px, 0) scale(1.06); }
-            100% { transform: translate3d(0, 0, 0) scale(1); }
-        }
-        @keyframes haloPulse {
-            0% { transform: scale(0.96); opacity: 0.7; }
-            50% { transform: scale(1.08); opacity: 1; }
-            100% { transform: scale(0.96); opacity: 0.7; }
-        }
-        @keyframes shimmerText {
-            0% { background-position: 0% 50%; }
-            100% { background-position: 100% 50%; }
-        }
-        @keyframes fadeRise {
-            from { opacity: 0; transform: translateY(12px); }
-            to { opacity: 1; transform: translateY(0); }
+        @media (max-width: 900px) {
+            .topbar-shell,
+            .topbar-left {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+            .topbar-shell {
+                justify-content: flex-start;
+                padding-top: 1rem;
+                padding-bottom: 1rem;
+            }
+            .topbar-center {
+                position: static;
+                transform: none;
+                width: 100%;
+                justify-content: flex-start;
+                margin-top: 0.6rem;
+            }
+            .topbar-title {
+                text-align: left;
+            }
+            .topbar-subtitle {
+                text-align: left;
+            }
+            .topbar-spacer {
+                display: none;
+            }
+            .hero-title {
+                font-size: 2.35rem;
+            }
         }
         @keyframes loaderSpin {
             from { transform: rotate(0deg); }
@@ -478,6 +529,7 @@ def inject_styles():
 
 
 def init_state():
+    # Persist the conversation, preview, file output, and UI flags across Streamlit reruns.
     if "messages" not in st.session_state:
         st.session_state.messages = []
     if "conversation_text" not in st.session_state:
@@ -503,20 +555,23 @@ def init_state():
     if "ui_bootstrapped" not in st.session_state:
         st.session_state.ui_bootstrapped = False
     if not st.session_state.messages:
+        # Seed the conversation once so the user lands on the first interview question.
         st.session_state.messages.append(
             {
                 "role": "assistant",
-                "content": "Hi! I will help you create your CV.\n\nWhat is your full name?",
+                "content": "Hi! I will help you to create your CV.\n\nWhat is your full name?",
             }
         )
 
 
 def build_conversation_text(messages):
+    # The extractor only needs the user's answers, not the assistant prompts.
     user_lines = [f"User: {msg['content']}" for msg in messages if msg["role"] == "user"]
     return "\n".join(user_lines)
 
 
 def sync_preview():
+    # Rebuild the structured CV preview from the latest conversation snapshot.
     conversation_text = build_conversation_text(st.session_state.messages)
     st.session_state.conversation_text = conversation_text
 
@@ -534,6 +589,8 @@ def sync_preview():
 
 
 def process_user_reply(user_text):
+    # Commit the user's message and store the user text in session state message,
+    #  ask the model for the next question, then refresh the preview.
     cleaned = user_text.strip()
     if not cleaned:
         return
@@ -545,6 +602,8 @@ def process_user_reply(user_text):
 
 
 def queue_user_reply(user_text):
+    # Queue the reply first so the composer can lock while the LLM call happens on the next rerun.
+    # stroring the user text in temporary session state to avoid issues with Streamlit's form handling and stale closures.
     cleaned = user_text.strip()
     if not cleaned:
         return
@@ -555,6 +614,7 @@ def queue_user_reply(user_text):
 
 
 def generate_cv_file():
+    # Validate the latest structured data before exporting the final PDF.
     sync_preview()
     structured = st.session_state.structured_cv or {}
     cv = CVSchema.model_validate(structured)
@@ -603,9 +663,11 @@ def render_list(items, empty_message):
         st.write(f"- {item}")
 
 
+@st.cache_data(show_spinner=False)
 def get_brand_logo_markup():
     for logo_path in LOGO_CANDIDATES:
         if logo_path.exists():
+            # Inline the local logo as base64 so the hero works without any extra asset hosting.
             suffix = logo_path.suffix.lower().lstrip(".") or "png"
             encoded = base64.b64encode(logo_path.read_bytes()).decode("utf-8")
             return f'<img class="hero-logo" src="data:image/{suffix};base64,{encoded}" alt="NTT DATA logo" />'
@@ -634,16 +696,16 @@ if not st.session_state.ui_bootstrapped:
         <div class="app-loader-shell">
             <div class="app-loader-card">
                 <div class="app-loader-spinner"></div>
-                <div class="app-loader-title">Tool is loading</div>
+                <div class="app-loader-title">NTT DATA AI CV Tool is loading</div>
                 <div class="app-loader-copy">
-                    Preparing the NTT DATA Internal CV Studio and loading the workspace.
+                    Preparing the workspace and loading the dashboard.
                 </div>
             </div>
         </div>
         """,
         unsafe_allow_html=True,
     )
-    time.sleep(0.7)
+    time.sleep(0.3)  # Simulate loading time for better UX, adjust as needed.
     st.session_state.ui_bootstrapped = True
     st.rerun()
 
@@ -655,17 +717,30 @@ skills_count = len(structured_cv.get("skills", []))
 
 st.markdown(
     f"""
-    <div class="dashboard-card hero-shell">
-        <div class="hero-content">
-        <div class="hero-brand">
-            {get_brand_logo_markup()}
-            <div class="hero-brand-copy">
-                <div class="hero-brand-pill">NTT DATA Internal CV Studio</div>
+    <div class="topbar-shell">
+        <div class="topbar-left">
+            <div class="topbar-logo-wrap">
+                {get_brand_logo_markup()}
             </div>
         </div>
-        <div class="hero-title">Craft stronger NTT DATA profiles with clarity and impact.</div>
+        <div class="topbar-center">
+            <div>
+                <div class="topbar-title">
+                    <span class="topbar-title-soft">NTT DATA </span><span class="topbar-title-accent">Internal CV Studio</span>
+                </div>
+                <div class="topbar-subtitle">Real-time profile building workspace for internal talent representation</div>
+            </div>
+        </div>
+        <div class="topbar-spacer"></div>
+    </div>
+    <div class="dashboard-card hero-shell">
+        <div class="hero-content">
+        <div class="hero-kicker">Real-time CV intelligence</div>
+        <div class="hero-title">
+            <span class="hero-title-accent">Craft stronger </span><span class="hero-title-soft">NTT DATA profiles in real time</span><span class="hero-title-tail"> with clarity and impact.</span>
+        </div>
         <p class="hero-copy">
-            Enable teams to capture consultant experience, skills, achievements, and project depth in a refined format for internal talent profiling and client-facing opportunities.
+            <span class="hero-copy-soft">Capture</span> <span class="hero-copy-accent">consultant experience, skills, and project depth</span> <span class="hero-copy-soft">in a more structured format so teams can prepare</span> <span class="hero-copy-accent">polished internal profiles</span> <span class="hero-copy-soft">and client-facing resumes faster.</span>
         </p>
         <div class="hero-meta">
             <span class="hero-pill">NTT DATA-ready resume flow</span>
@@ -709,6 +784,7 @@ with left_col:
             audio_bytes = recorded_audio.getvalue()
             fingerprint = hashlib.sha256(audio_bytes).hexdigest()
             if fingerprint != st.session_state.last_audio_fingerprint:
+                # Fingerprinting prevents the same recording from being transcribed repeatedly on rerun.
                 with st.spinner("Transcribing your audio..."):
                     try:
                         transcript = transcribe_audio(audio_bytes, recorded_audio.name or "speech.wav")
@@ -850,6 +926,7 @@ if st.session_state.chat_error:
 
 if st.session_state.is_processing_reply and st.session_state.pending_user_reply:
     try:
+        # Run the LLM call after the form submit rerun so the chat stays disabled while work is in progress.
         with st.spinner("Assistant is preparing the next question..."):
             process_user_reply(st.session_state.pending_user_reply)
         st.session_state.pending_user_reply = ""
