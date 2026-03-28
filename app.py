@@ -478,13 +478,13 @@ def inject_styles():
             transform: translateY(-1px);
         }
         div[data-testid="stButton"] button[kind="primary"] {
-            background: linear-gradient(135deg, #19b983 0%, #0f9f66 100%);
-            border: 1px solid #0f9f66;
+            background: linear-gradient(135deg, #0a72c8 0%, #1f8ad8 100%);
+            border: 1px solid #0a72c8;
             color: #ffffff;
         }
         div[data-testid="stButton"] button[kind="primary"]:hover {
-            background: linear-gradient(135deg, #10a36d 0%, #0b8a5b 100%);
-            border-color: #0b8a5b;
+            background: linear-gradient(135deg, #0862ae 0%, #1778c4 100%);
+            border-color: #0862ae;
             color: #ffffff;
         }
         @media (max-width: 900px) {
@@ -542,6 +542,12 @@ def init_state():
         st.session_state.generated_cv_path = ""
     if "generated_cv_name" not in st.session_state:
         st.session_state.generated_cv_name = "cv.pdf"
+    if "profile_photo_bytes" not in st.session_state:
+        st.session_state.profile_photo_bytes = b""
+    if "profile_photo_name" not in st.session_state:
+        st.session_state.profile_photo_name = ""
+    if "photo_offer_made" not in st.session_state:
+        st.session_state.photo_offer_made = False
     if "last_audio_fingerprint" not in st.session_state:
         st.session_state.last_audio_fingerprint = ""
     if "latest_transcript" not in st.session_state:
@@ -596,8 +602,14 @@ def process_user_reply(user_text):
         return
 
     st.session_state.messages.append({"role": "user", "content": cleaned})
-    next_question = get_next_question(st.session_state.messages)
+    next_question = get_next_question(
+        st.session_state.messages,
+        has_profile_photo=bool(st.session_state.profile_photo_bytes),
+        photo_offer_made=st.session_state.photo_offer_made,
+    )
     st.session_state.messages.append({"role": "assistant", "content": next_question})
+    if "photo" in next_question.lower():
+        st.session_state.photo_offer_made = True
     sync_preview()
 
 
@@ -619,7 +631,9 @@ def generate_cv_file():
     structured = st.session_state.structured_cv or {}
     cv = CVSchema.model_validate(structured)
     safe_name = (cv.name or "candidate_cv").strip().replace(" ", "_")
-    output_path = generate_pdf(cv.model_dump(), f"{safe_name}.pdf")
+    payload = cv.model_dump()
+    payload["profile_photo_bytes"] = st.session_state.profile_photo_bytes
+    output_path = generate_pdf(payload, f"{safe_name}.pdf")
     st.session_state.generated_cv_path = output_path
     st.session_state.generated_cv_name = f"{safe_name}.pdf"
 
@@ -836,13 +850,35 @@ with right_col:
     st.markdown(
         """
         <div class="panel-banner">
-            <div class="panel-tag" style="background: var(--accent-soft); color: var(--accent);">Structured Output</div>
+            <div class="panel-tag" style="background: rgba(0, 116, 200, 0.1); color: #0a72c8;">Structured Output</div>
             <div class="section-title">CV Snapshot</div>
             <div class="section-copy">Review extracted details, spot missing information quickly, and export the final PDF when everything looks right.</div>
         </div>
         """,
         unsafe_allow_html=True,
     )
+
+    uploaded_photo = st.file_uploader(
+        "Upload profile photo",
+        type=["png", "jpg", "jpeg"],
+        help="Optional: upload a professional headshot to include in the final CV.",
+        disabled=st.session_state.is_processing_reply,
+    )
+    if uploaded_photo is not None:
+        st.session_state.profile_photo_bytes = uploaded_photo.getvalue()
+        st.session_state.profile_photo_name = uploaded_photo.name or "profile_photo"
+        st.session_state.photo_offer_made = True
+
+    if st.session_state.profile_photo_bytes:
+        photo_cols = st.columns([0.45, 0.55], gap="small")
+        with photo_cols[0]:
+            st.image(st.session_state.profile_photo_bytes, caption="Profile photo", use_container_width=True)
+        with photo_cols[1]:
+            st.caption(st.session_state.profile_photo_name or "Uploaded photo")
+            if st.button("Remove Photo", use_container_width=True):
+                st.session_state.profile_photo_bytes = b""
+                st.session_state.profile_photo_name = ""
+                st.rerun()
 
     action_cols = st.columns(2)
     with action_cols[0]:

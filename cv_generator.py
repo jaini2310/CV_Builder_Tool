@@ -1,6 +1,8 @@
 # cv_generator.py
 import os
 import re
+from io import BytesIO
+from pathlib import Path
 from typing import Any, Dict, Iterable, List
 
 from docxtpl import DocxTemplate
@@ -9,10 +11,44 @@ from reportlab.lib.enums import TA_CENTER
 from reportlab.lib.pagesizes import A4
 from reportlab.lib.styles import ParagraphStyle, getSampleStyleSheet
 from reportlab.lib.units import inch
-from reportlab.platypus import HRFlowable, Paragraph, SimpleDocTemplate, Spacer
+from reportlab.lib.utils import ImageReader
+from reportlab.platypus import HRFlowable, Image as RLImage, Paragraph, SimpleDocTemplate, Spacer, Table, TableStyle
 
 TEMPLATES_DIR = "templates"
 OUTPUT_DIR = "output"
+LOGO_CANDIDATES = [
+    Path("assets/ntt_data_logo.png"),
+    Path("assets/NTT_Logo.png"),
+    Path("assets/ntt_logo.png"),
+    Path("assets/logo.png"),
+]
+
+
+def _get_footer_logo():
+    for logo_path in LOGO_CANDIDATES:
+        if logo_path.exists():
+            return ImageReader(str(logo_path))
+    return None
+
+
+def _draw_confidential_footer(canvas, doc):
+    canvas.saveState()
+    logo = _get_footer_logo()
+    footer_y = 0.35 * inch
+    if logo is not None:
+        canvas.drawImage(
+            logo,
+            doc.leftMargin,
+            footer_y - 0.08 * inch,
+            width=0.9 * inch,
+            height=0.26 * inch,
+            preserveAspectRatio=True,
+            mask="auto",
+        )
+    canvas.setFont("Helvetica-Bold", 9)
+    canvas.setFillColor(colors.HexColor("#64748B"))
+    canvas.drawCentredString(A4[0] / 2, footer_y, "NTT DATA CONFIDENTIAL")
+    canvas.restoreState()
 
 
 def _safe_filename(value: str, fallback: str = "candidate_cv") -> str:
@@ -165,12 +201,39 @@ def generate_pdf(cv_data: Dict[str, Any], output_filename: str | None = None) ->
     contact = cv_data.get("contact") or ""
     summary = (cv_data.get("summary") or "").strip()
     objectives = (cv_data.get("objectives") or "").strip()
+    profile_photo_bytes = cv_data.get("profile_photo_bytes")
 
     subheader_parts = [part for part in [title, experience_text, location, contact] if part]
 
-    story.append(Paragraph(name, styles["ResumeHeader"]))
-    if subheader_parts:
-        story.append(Paragraph(" | ".join(subheader_parts), styles["ResumeSubheader"]))
+    if profile_photo_bytes:
+        header_flowables = [Paragraph(name, styles["ResumeHeader"])]
+        if subheader_parts:
+            header_flowables.append(Paragraph(" | ".join(subheader_parts), styles["ResumeSubheader"]))
+
+        photo = RLImage(BytesIO(profile_photo_bytes), width=1.1 * inch, height=1.35 * inch)
+        photo.hAlign = "RIGHT"
+        header_table = Table(
+            [[header_flowables, photo]],
+            colWidths=[5.65 * inch, 1.0 * inch],
+            hAlign="LEFT",
+        )
+        header_table.setStyle(
+            TableStyle(
+                [
+                    ("VALIGN", (0, 0), (-1, -1), "TOP"),
+                    ("LEFTPADDING", (0, 0), (-1, -1), 0),
+                    ("RIGHTPADDING", (0, 0), (-1, -1), 0),
+                    ("TOPPADDING", (0, 0), (-1, -1), 0),
+                    ("BOTTOMPADDING", (0, 0), (-1, -1), 0),
+                ]
+            )
+        )
+        story.append(header_table)
+    else:
+        story.append(Paragraph(name, styles["ResumeHeader"]))
+        if subheader_parts:
+            story.append(Paragraph(" | ".join(subheader_parts), styles["ResumeSubheader"]))
+
     story.append(HRFlowable(width="100%", thickness=1.2, color=colors.HexColor("#CBD5E1")))
     story.append(Spacer(1, 0.12 * inch))
 
@@ -236,5 +299,5 @@ def generate_pdf(cv_data: Dict[str, Any], output_filename: str | None = None) ->
         title=f"{name} CV",
         author=name,
     )
-    doc.build(story)
+    doc.build(story, onFirstPage=_draw_confidential_footer, onLaterPages=_draw_confidential_footer)
     return out_path
