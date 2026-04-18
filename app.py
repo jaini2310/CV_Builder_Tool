@@ -9,7 +9,7 @@ from cv_generator import generate_pdf
 from llm_service import extract_structured_cv, get_next_question, transcribe_audio
 from schema import CVSchema
 
-st.set_page_config(page_title="NTT DATA AI CV Dashboard", layout="wide")
+st.set_page_config(page_title="NTT DATA CV Dashboard", layout="wide")
 
 LOGO_CANDIDATES = [
     Path("assets/ntt_data_logo.png"),
@@ -382,6 +382,28 @@ def inject_styles():
             letter-spacing: 0.05em;
             margin-bottom: 0.55rem;
         }
+        .workspace-divider-wrap {
+            height: 100%;
+            min-height: 72vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            pointer-events: none;
+        }
+        .workspace-divider {
+            width: 4px;
+            height: 96%;
+            border-radius: 999px;
+            background: linear-gradient(
+                180deg,
+                rgba(7, 100, 170, 0.2) 0%,
+                rgba(7, 100, 170, 0.72) 22%,
+                rgba(16, 176, 160, 0.78) 50%,
+                rgba(7, 100, 170, 0.72) 78%,
+                rgba(7, 100, 170, 0.2) 100%
+            );
+            box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.72), 0 0 0 2px rgba(8, 108, 184, 0.16), 0 10px 28px rgba(8, 108, 184, 0.26);
+        }
         div[data-testid="stVerticalBlockBorderWrapper"] {
             border: 1px solid var(--line) !important;
             border-radius: 24px !important;
@@ -418,6 +440,38 @@ def inject_styles():
             font-size: 0.98rem !important;
             padding-left: 0.2rem !important;
         }
+        div[data-testid="stForm"] div[data-testid="stAudioInput"] {
+            display: flex;
+            align-items: stretch;
+            height: 100%;
+        }
+        div[data-testid="stForm"] div[data-testid="stAudioInput"] > div {
+            width: 100%;
+        }
+        div[data-testid="stForm"] div[data-testid="stAudioInput"] audio,
+        div[data-testid="stForm"] div[data-testid="stAudioInput"] small,
+        div[data-testid="stForm"] div[data-testid="stAudioInput"] p {
+            display: none !important;
+        }
+        div[data-testid="stForm"] div[data-testid="stAudioInput"] button {
+            min-height: 3.25rem !important;
+            width: 100% !important;
+            border-radius: 20px !important;
+            border: 0 !important;
+            background: linear-gradient(135deg, #0074c8 0%, #11b9a4 100%) !important;
+            color: #ffffff !important;
+            box-shadow: 0 16px 30px rgba(0, 116, 200, 0.2);
+            font-size: 0 !important;
+        }
+        div[data-testid="stForm"] div[data-testid="stAudioInput"] button svg {
+            color: #ffffff !important;
+            fill: #ffffff !important;
+        }
+        div[data-testid="stForm"] div[data-testid="stAudioInput"] button:disabled {
+            background: linear-gradient(145deg, #c6d1dd, #b8c5d3) !important;
+            color: #f8fbff !important;
+            box-shadow: none !important;
+        }
         div[data-testid="stForm"] div[data-baseweb="input"] input:disabled {
             color: #7b8798 !important;
             -webkit-text-fill-color: #7b8798 !important;
@@ -435,10 +489,29 @@ def inject_styles():
             border: 0 !important;
             color: #ffffff !important;
             box-shadow: 0 16px 30px rgba(0, 116, 200, 0.2);
+            display: flex !important;
+            align-items: center !important;
+            justify-content: center !important;
         }
         div[data-testid="stForm"] div[data-testid="stFormSubmitButton"] button:hover {
             transform: translateY(-1px);
             box-shadow: 0 20px 34px rgba(0, 116, 200, 0.24);
+        }
+        div[data-testid="stForm"] div[data-testid="stFormSubmitButton"]:nth-of-type(1) button,
+        div[data-testid="stForm"] div[data-testid="stFormSubmitButton"]:last-of-type button {
+            font-size: 0 !important;
+        }
+        div[data-testid="stForm"] div[data-testid="stFormSubmitButton"]:nth-of-type(1) button::before {
+            content: "🎤";
+            font-size: 1rem;
+            font-weight: 700;
+            color: #ffffff;
+        }
+        div[data-testid="stForm"] div[data-testid="stFormSubmitButton"]:last-of-type button::before {
+            content: "->";
+            font-size: 1rem;
+            font-weight: 700;
+            color: #ffffff;
         }
         div[data-testid="stForm"] div[data-testid="stFormSubmitButton"] button:disabled,
         div[data-testid="stButton"] button:disabled {
@@ -449,6 +522,90 @@ def inject_styles():
             opacity: 0.85;
             cursor: not-allowed !important;
             transform: none !important;
+        }
+        div[data-testid="stForm"] div[data-testid="stFormSubmitButton"]:nth-of-type(1) button::before {
+            content: "\\01F3A4";
+            font-size: 1.2rem;
+            font-weight: 700;
+            color: #ffffff;
+        }
+        div[data-testid="stForm"] div[data-testid="stFormSubmitButton"]:last-of-type button::before {
+            content: "\\2192";
+            font-size: 1.2rem;
+            font-weight: 700;
+            color: #ffffff;
+        }
+        div[data-testid="stForm"] div[data-testid="stFormSubmitButton"] {
+            display: flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+        }
+        div[data-testid="stForm"] div[data-testid="stFormSubmitButton"] button {
+            width: 3rem !important;
+            min-width: 3rem !important;
+            min-height: 3rem !important;
+            height: 3rem !important;
+            padding: 0 !important;
+            border-radius: 999px !important;
+            border: 1px solid rgba(125, 150, 182, 0.2) !important;
+            background: rgba(255, 255, 255, 0.96) !important;
+            color: #36506f !important;
+            box-shadow: 0 10px 24px rgba(12, 35, 64, 0.08) !important;
+            display: flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            transition: transform 0.15s ease, box-shadow 0.15s ease, background 0.15s ease !important;
+        }
+        div[data-testid="stForm"] div[data-testid="stFormSubmitButton"] button:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 14px 28px rgba(12, 35, 64, 0.12) !important;
+        }
+        div[data-testid="stForm"] div[data-testid="stFormSubmitButton"] button p {
+            font-size: 0 !important;
+            line-height: 0 !important;
+        }
+        div[data-testid="stForm"] [data-testid="column"]:nth-of-type(2) div[data-testid="stFormSubmitButton"] button::before {
+            content: "\\01F3A4";
+            font-size: 1.05rem;
+            font-weight: 700;
+            color: #36506f;
+        }
+        div[data-testid="stForm"] [data-testid="column"]:nth-of-type(3) div[data-testid="stFormSubmitButton"] button {
+            border: 0 !important;
+            background: linear-gradient(135deg, #0074c8 0%, #11b9a4 100%) !important;
+            color: #ffffff !important;
+            box-shadow: 0 14px 28px rgba(0, 116, 200, 0.2) !important;
+        }
+        div[data-testid="stForm"] [data-testid="column"]:nth-of-type(3) div[data-testid="stFormSubmitButton"] button:hover {
+            box-shadow: 0 18px 32px rgba(0, 116, 200, 0.24) !important;
+        }
+        div[data-testid="stForm"] [data-testid="column"]:nth-of-type(3) div[data-testid="stFormSubmitButton"] button::before {
+            content: "\\2191";
+            font-size: 1.2rem;
+            font-weight: 700;
+            color: #ffffff;
+        }
+        div[data-testid="stForm"] div[data-testid="stFormSubmitButton"] button:disabled::before {
+            color: #f8fbff !important;
+        }
+        div[data-testid="stForm"] div[data-testid="stFormSubmitButton"] button::before {
+            content: none !important;
+        }
+        div[data-testid="stForm"] div[data-testid="stFormSubmitButton"] button p {
+            font-size: 1.15rem !important;
+            line-height: 1 !important;
+            margin: 0 !important;
+            font-weight: 700 !important;
+            color: inherit !important;
+        }
+        div[data-testid="stForm"] div[data-testid="stFormSubmitButton"]:last-of-type button {
+            border: 0 !important;
+            background: linear-gradient(135deg, #0074c8 0%, #11b9a4 100%) !important;
+            color: #ffffff !important;
+            box-shadow: 0 14px 28px rgba(0, 116, 200, 0.2) !important;
+        }
+        div[data-testid="stForm"] div[data-testid="stFormSubmitButton"]:last-of-type button:hover {
+            box-shadow: 0 18px 32px rgba(0, 116, 200, 0.24) !important;
         }
         div[data-baseweb="input"] > div,
         div[data-baseweb="textarea"] > div {
@@ -517,6 +674,9 @@ def inject_styles():
             .hero-title {
                 font-size: 2.35rem;
             }
+            .workspace-divider-wrap {
+                display: none;
+            }
         }
         @keyframes loaderSpin {
             from { transform: rotate(0deg); }
@@ -542,6 +702,10 @@ def init_state():
         st.session_state.generated_cv_path = ""
     if "generated_cv_name" not in st.session_state:
         st.session_state.generated_cv_name = "cv.pdf"
+    if "composer_text" not in st.session_state:
+        st.session_state.composer_text = ""
+    if "pending_clear_composer" not in st.session_state:
+        st.session_state.pending_clear_composer = False
     if "profile_photo_bytes" not in st.session_state:
         st.session_state.profile_photo_bytes = b""
     if "profile_photo_name" not in st.session_state:
@@ -552,6 +716,12 @@ def init_state():
         st.session_state.last_audio_fingerprint = ""
     if "latest_transcript" not in st.session_state:
         st.session_state.latest_transcript = ""
+    if "pending_transcript_fill" not in st.session_state:
+        st.session_state.pending_transcript_fill = ""
+    if "show_mic_panel" not in st.session_state:
+        st.session_state.show_mic_panel = False
+    if "audio_notice" not in st.session_state:
+        st.session_state.audio_notice = ""
     if "is_processing_reply" not in st.session_state:
         st.session_state.is_processing_reply = False
     if "pending_user_reply" not in st.session_state:
@@ -565,7 +735,7 @@ def init_state():
         st.session_state.messages.append(
             {
                 "role": "assistant",
-                "content": "Hi! I will help you to create your CV.\n\nWhat is your full name?",
+                "content": "Hi! I will help you to create your CV in NTT Data Format.\n\nWhat is your full name?",
             }
         )
 
@@ -656,16 +826,7 @@ def calculate_completion(cv_data):
 
 
 def render_metric_card(label, value):
-    st.markdown(
-        f"""
-        <div class="dashboard-card metric-card">
-            <div class="metric-kicker">{label}</div>
-            <div class="metric-value">{value}</div>
-            <div class="metric-subtle">Live from the current conversation</div>
-        </div>
-        """,
-        unsafe_allow_html=True,
-    )
+    st.metric(label, value)
 
 
 def render_list(items, empty_message):
@@ -701,71 +862,22 @@ def get_brand_logo_markup():
     """
 
 
-inject_styles()
 init_state()
 
-if not st.session_state.ui_bootstrapped:
-    st.markdown(
-        """
-        <div class="app-loader-shell">
-            <div class="app-loader-card">
-                <div class="app-loader-spinner"></div>
-                <div class="app-loader-title">NTT DATA AI CV Tool is loading</div>
-                <div class="app-loader-copy">
-                    Preparing the workspace and loading the dashboard.
-                </div>
-            </div>
-        </div>
-        """,
-        unsafe_allow_html=True,
-    )
-    time.sleep(0.3)  # Simulate loading time for better UX, adjust as needed.
-    st.session_state.ui_bootstrapped = True
-    st.rerun()
+if st.session_state.pending_transcript_fill and not st.session_state.is_processing_reply:
+    # Fill the chat draft on the next rerun so the transcript appears inside the composer.
+    st.session_state.composer_text = st.session_state.pending_transcript_fill
+    st.session_state.pending_transcript_fill = ""
+
+if st.session_state.pending_clear_composer and not st.session_state.is_processing_reply:
+    st.session_state.composer_text = ""
+    st.session_state.pending_clear_composer = False
 
 structured_cv = st.session_state.structured_cv or {}
 completion = calculate_completion(structured_cv)
 user_responses = sum(1 for msg in st.session_state.messages if msg["role"] == "user")
 experience_items = len(structured_cv.get("experience", []))
 skills_count = len(structured_cv.get("skills", []))
-
-st.markdown(
-    f"""
-    <div class="topbar-shell">
-        <div class="topbar-left">
-            <div class="topbar-logo-wrap">
-                {get_brand_logo_markup()}
-            </div>
-        </div>
-        <div class="topbar-center">
-            <div>
-                <div class="topbar-title">
-                    <span class="topbar-title-soft">NTT DATA </span><span class="topbar-title-accent">Internal CV Studio</span>
-                </div>
-                <div class="topbar-subtitle">Real-time profile building workspace for internal talent representation</div>
-            </div>
-        </div>
-        <div class="topbar-spacer"></div>
-    </div>
-    <div class="dashboard-card hero-shell">
-        <div class="hero-content">
-        <div class="hero-kicker">Real-time CV intelligence</div>
-        <div class="hero-title">
-            <span class="hero-title-accent">Craft stronger </span><span class="hero-title-soft">NTT DATA profiles in real time</span><span class="hero-title-tail"> with clarity and impact.</span>
-        </div>
-        <p class="hero-copy">
-            <span class="hero-copy-soft">Capture</span> <span class="hero-copy-accent">consultant experience, skills, and project depth</span> <span class="hero-copy-soft">in a more structured format so teams can prepare</span> <span class="hero-copy-accent">polished internal profiles</span> <span class="hero-copy-soft">and client-facing resumes faster.</span>
-        </p>
-        <div class="hero-meta">
-            <span class="hero-pill">NTT DATA-ready resume flow</span>
-            <span class="hero-pill">Voice-assisted profiling</span>
-            <span class="hero-pill">Clean PDF export</span>
-        </div>
-        </div>
-    </div>
-    """,
-    unsafe_allow_html=True,
-)
 
 metric_cols = st.columns(4)
 with metric_cols[0]:
@@ -780,55 +892,68 @@ with metric_cols[3]:
 left_col, right_col = st.columns([1.35, 1], gap="large")
 
 with left_col:
-    st.markdown(
-        """
-        <div class="panel-banner">
-            <div class="panel-tag">Live Interview</div>
-            <div class="section-title">Conversation Workspace</div>
-            <div class="section-copy">Ask and answer naturally. The assistant keeps building the CV structure in the background.</div>
-        </div>
-        """,
-        unsafe_allow_html=True,
-    )
-
-    if hasattr(st, "audio_input"):
-        st.markdown('<div class="panel-tag" style="margin-bottom:0.45rem;">Microphone</div>', unsafe_allow_html=True)
-        recorded_audio = st.audio_input("Record a spoken answer", disabled=st.session_state.is_processing_reply)
-        if recorded_audio is not None:
-            audio_bytes = recorded_audio.getvalue()
-            fingerprint = hashlib.sha256(audio_bytes).hexdigest()
-            if fingerprint != st.session_state.last_audio_fingerprint:
-                # Fingerprinting prevents the same recording from being transcribed repeatedly on rerun.
-                with st.spinner("Transcribing your audio..."):
-                    try:
-                        transcript = transcribe_audio(audio_bytes, recorded_audio.name or "speech.wav")
-                        st.session_state.latest_transcript = transcript
-                        st.session_state.last_audio_fingerprint = fingerprint
-                    except Exception as exc:
-                        st.session_state.latest_transcript = ""
-                        st.error(f"Speech-to-text failed: {exc}")
-    else:
-        st.info("This Streamlit version does not support `st.audio_input`, so speech capture is unavailable.")
-
-    if st.session_state.latest_transcript:
-        st.text_area(
-            "Latest transcript",
-            value=st.session_state.latest_transcript,
-            height=100,
-            disabled=True,
-        )
-        if st.button("Use Transcript", use_container_width=True, disabled=st.session_state.is_processing_reply):
-            queue_user_reply(st.session_state.latest_transcript)
-            st.session_state.latest_transcript = ""
-            st.rerun()
-
     with st.container(border=True):
         for msg in st.session_state.messages:
             with st.chat_message(msg["role"]):
                 st.markdown(msg["content"])
 
-    with st.form("chat_composer", clear_on_submit=True):
-        composer_cols = st.columns([0.8, 0.2], gap="small")
+    if st.session_state.show_mic_panel:
+        with st.container(border=True):
+            mic_header_cols = st.columns([0.82, 0.18], gap="small")
+            with mic_header_cols[0]:
+                st.markdown("**Microphone**")
+                st.caption("Click the mic icon to open this panel, record your response, then send the transcript into the chat.")
+            with mic_header_cols[1]:
+                if st.button("Close Mic", use_container_width=True, disabled=st.session_state.is_processing_reply):
+                    st.session_state.show_mic_panel = False
+                    st.rerun()
+
+            if hasattr(st, "audio_input"):
+                recorded_audio_panel = st.audio_input(
+                    "Record a spoken answer",
+                    label_visibility="collapsed",
+                    disabled=st.session_state.is_processing_reply,
+                )
+                if recorded_audio_panel is not None:
+                    audio_bytes = recorded_audio_panel.getvalue()
+                    fingerprint = hashlib.sha256(audio_bytes).hexdigest() if audio_bytes else ""
+                    if fingerprint and fingerprint != st.session_state.last_audio_fingerprint:
+                        with st.spinner("Transcribing your audio..."):
+                            try:
+                                transcript = transcribe_audio(audio_bytes, recorded_audio_panel.name or "speech.wav")
+                                st.session_state.last_audio_fingerprint = fingerprint
+                                if transcript:
+                                    st.session_state.latest_transcript = transcript
+                                else:
+                                    st.session_state.latest_transcript = ""
+                                    st.session_state.audio_notice = "No clear speech was detected. Please try recording again."
+                                st.rerun()
+                            except Exception as exc:
+                                st.session_state.latest_transcript = ""
+                                st.session_state.audio_notice = ""
+                                st.error(f"Speech-to-text failed: {exc}")
+            else:
+                st.info("This Streamlit version does not support `st.audio_input`, so speech capture is unavailable.")
+
+            if st.session_state.latest_transcript:
+                st.text_area(
+                    "Latest transcript",
+                    value=st.session_state.latest_transcript,
+                    height=100,
+                    disabled=True,
+                )
+                if st.button("Use Transcript", use_container_width=True, disabled=st.session_state.is_processing_reply):
+                    st.session_state.pending_transcript_fill = st.session_state.latest_transcript
+                    st.session_state.latest_transcript = ""
+                    st.session_state.show_mic_panel = False
+                    st.rerun()
+
+    if st.session_state.audio_notice:
+        st.info(st.session_state.audio_notice)
+        st.session_state.audio_notice = ""
+
+    with st.form("chat_composer", clear_on_submit=False):
+        composer_cols = st.columns([0.82, 0.09, 0.09], gap="small")
 
         with composer_cols[0]:
             typed_reply = st.text_input(
@@ -840,24 +965,31 @@ with left_col:
             )
 
         with composer_cols[1]:
-            send_clicked = st.form_submit_button("->", use_container_width=True, disabled=st.session_state.is_processing_reply)
+            mic_clicked = st.form_submit_button(
+                "\U0001F3A4",
+                use_container_width=True,
+                disabled=st.session_state.is_processing_reply,
+            )
+
+        with composer_cols[2]:
+            send_clicked = st.form_submit_button(
+                "\u27A4",
+                use_container_width=True,
+                disabled=st.session_state.is_processing_reply,
+            )
+
+    if mic_clicked:
+        st.session_state.show_mic_panel = True
+        st.rerun()
 
     if send_clicked and typed_reply.strip():
         queue_user_reply(typed_reply)
+        st.session_state.pending_clear_composer = True
+        st.session_state.latest_transcript = ""
+        st.session_state.show_mic_panel = False
         st.rerun()
 
 with right_col:
-    st.markdown(
-        """
-        <div class="panel-banner">
-            <div class="panel-tag" style="background: rgba(0, 116, 200, 0.1); color: #0a72c8;">Structured Output</div>
-            <div class="section-title">CV Snapshot</div>
-            <div class="section-copy">Review extracted details, spot missing information quickly, and export the final PDF when everything looks right.</div>
-        </div>
-        """,
-        unsafe_allow_html=True,
-    )
-
     uploaded_photo = st.file_uploader(
         "Upload profile photo",
         type=["png", "jpg", "jpeg"],

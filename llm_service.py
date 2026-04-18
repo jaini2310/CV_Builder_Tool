@@ -119,6 +119,9 @@ def extract_structured_cv(conversation_text):
 
 
 def transcribe_audio(audio_bytes, filename="speech.wav"):
+    if not audio_bytes or len(audio_bytes) < 1024:
+        return ""
+
     audio_stream = BytesIO(audio_bytes)
     audio_stream.name = filename
 
@@ -128,7 +131,4 @@ def transcribe_audio(audio_bytes, filename="speech.wav"):
     )
 
     transcript = getattr(response, "text", "").strip()
-    if not transcript:
-        raise ValueError("Speech transcription returned an empty result.")
-
     return transcript
