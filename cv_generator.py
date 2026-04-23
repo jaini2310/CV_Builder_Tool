@@ -7,20 +7,21 @@ from typing import Any, Dict, Iterable, List
 
 from docxtpl import DocxTemplate
 from reportlab.lib import colors
-from reportlab.lib.enums import TA_CENTER
+from reportlab.lib.enums import TA_CENTER, TA_LEFT
 from reportlab.lib.pagesizes import A4
 from reportlab.lib.styles import ParagraphStyle, getSampleStyleSheet
 from reportlab.lib.units import inch
 from reportlab.lib.utils import ImageReader
 from reportlab.platypus import HRFlowable, Image as RLImage, Paragraph, SimpleDocTemplate, Spacer, Table, TableStyle
 
-TEMPLATES_DIR = "templates"
-OUTPUT_DIR = "output"
+BASE_DIR = Path(__file__).resolve().parent
+TEMPLATES_DIR = BASE_DIR / "templates"
+OUTPUT_DIR = BASE_DIR / "output"
 LOGO_CANDIDATES = [
-    Path("assets/ntt_data_logo.png"),
-    Path("assets/NTT_Logo.png"),
-    Path("assets/ntt_logo.png"),
-    Path("assets/logo.png"),
+    BASE_DIR / "assets" / "ntt_data_logo.png",
+    BASE_DIR / "assets" / "NTT_Logo.png",
+    BASE_DIR / "assets" / "ntt_logo.png",
+    BASE_DIR / "assets" / "logo.png",
 ]
 
 
@@ -82,12 +83,18 @@ def _normalize_experience(experience_items: Iterable[Any]) -> List[Dict[str, Any
     return rows
 
 
-def generate_docx(cv_data: Dict[str, Any], output_filename: str = "generated_cv.docx") -> str:
+def generate_docx(
+    cv_data: Dict[str, Any],
+    output_filename: str = "generated_cv.docx",
+    template_id: str = "custom",
+) -> str:
     """
     Fill the Word template placeholders and save a DOCX copy.
     """
-    template_path = os.path.join(TEMPLATES_DIR, "cv_template.docx")
-    doc = DocxTemplate(template_path)
+    template_path = TEMPLATES_DIR / "cv_template_clean.docx"
+    if not template_path.exists():
+        template_path = TEMPLATES_DIR / "cv_template.docx"
+    doc = DocxTemplate(str(template_path))
 
     context = {
         "objectives": cv_data.get("objectives", ""),
@@ -102,22 +109,17 @@ def generate_docx(cv_data: Dict[str, Any], output_filename: str = "generated_cv.
         "experience": _normalize_experience(cv_data.get("experience", [])),
         "certifications": cv_data.get("certifications", []),
         "achievements": cv_data.get("achievements", []),
+        "template_id": template_id,
     }
 
     doc.render(context)
     os.makedirs(OUTPUT_DIR, exist_ok=True)
-    out_path = os.path.join(OUTPUT_DIR, output_filename)
-    doc.save(out_path)
-    return out_path
+    out_path = OUTPUT_DIR / output_filename
+    doc.save(str(out_path))
+    return str(out_path)
 
 
-def generate_pdf(cv_data: Dict[str, Any], output_filename: str | None = None) -> str:
-    os.makedirs(OUTPUT_DIR, exist_ok=True)
-
-    candidate_name = cv_data.get("name", "")
-    filename = output_filename or f"{_safe_filename(candidate_name)}.pdf"
-    out_path = os.path.join(OUTPUT_DIR, filename)
-
+def _build_common_pdf_styles():
     styles = getSampleStyleSheet()
     styles.add(
         ParagraphStyle(
@@ -191,9 +193,29 @@ def generate_pdf(cv_data: Dict[str, Any], output_filename: str | None = None) ->
             spaceAfter=2,
         )
     )
+    styles.add(
+        ParagraphStyle(
+            name="CardHeader",
+            parent=styles["Heading2"],
+            fontName="Helvetica-Bold",
+            fontSize=12,
+            leading=15,
+            textColor=colors.white,
+            alignment=TA_LEFT,
+        )
+    )
+    return styles
 
+
+def _create_output_path(cv_data: Dict[str, Any], output_filename: str | None) -> str:
+    os.makedirs(OUTPUT_DIR, exist_ok=True)
+    candidate_name = cv_data.get("name", "")
+    filename = output_filename or f"{_safe_filename(candidate_name)}.pdf"
+    return str(OUTPUT_DIR / filename)
+
+
+def _build_custom_story(cv_data: Dict[str, Any], styles):
     story = []
-
     name = cv_data.get("name") or "Candidate Name"
     title = cv_data.get("title") or "Professional Title"
     experience_text = cv_data.get("total_it_experience") or ""
@@ -288,6 +310,175 @@ def generate_pdf(cv_data: Dict[str, Any], output_filename: str | None = None) ->
         if str(item).strip()
     ]
     add_section("Achievements", achievement_rows)
+    return story
+
+
+def _card(title: str, body: List[Any], width: float, accent_hex: str):
+    header = Table(
+        [[Paragraph(title, ParagraphStyle("CardHeaderInline", fontName="Helvetica-Bold", fontSize=11, textColor=colors.white))]],
+        colWidths=[width],
+    )
+    header.setStyle(
+        TableStyle(
+            [
+                ("BACKGROUND", (0, 0), (-1, -1), colors.HexColor(accent_hex)),
+                ("LEFTPADDING", (0, 0), (-1, -1), 10),
+                ("RIGHTPADDING", (0, 0), (-1, -1), 10),
+                ("TOPPADDING", (0, 0), (-1, -1), 7),
+                ("BOTTOMPADDING", (0, 0), (-1, -1), 7),
+            ]
+        )
+    )
+    body_table = Table([[body]], colWidths=[width])
+    body_table.setStyle(
+        TableStyle(
+            [
+                ("BACKGROUND", (0, 0), (-1, -1), colors.whitesmoke),
+                ("BOX", (0, 0), (-1, -1), 1, colors.HexColor("#D6E3F0")),
+                ("LEFTPADDING", (0, 0), (-1, -1), 10),
+                ("RIGHTPADDING", (0, 0), (-1, -1), 10),
+                ("TOPPADDING", (0, 0), (-1, -1), 8),
+                ("BOTTOMPADDING", (0, 0), (-1, -1), 8),
+            ]
+        )
+    )
+    return [header, body_table]
+
+
+def _build_postcard_story(cv_data: Dict[str, Any], styles):
+    name = cv_data.get("name") or "Candidate Name"
+    title = cv_data.get("title") or "Professional Title"
+    summary = (cv_data.get("summary") or "").strip() or "Summary pending."
+    skills = [str(skill).strip() for skill in cv_data.get("skills", []) if str(skill).strip()]
+    certifications = [str(item).strip() for item in cv_data.get("certifications", []) if str(item).strip()]
+    achievements = [str(item).strip() for item in cv_data.get("achievements", []) if str(item).strip()]
+    education = _flatten_education(cv_data.get("education", []))
+    experience = _normalize_experience(cv_data.get("experience", []))
+
+    hero = Table(
+        [[
+            Paragraph(
+                f"<font size='22'><b>{name}</b></font><br/><font size='11'>{title}</font><br/><font size='10'>{cv_data.get('total_it_experience') or ''}</font>",
+                ParagraphStyle("PostcardHero", fontName="Helvetica", fontSize=11, leading=14, textColor=colors.white),
+            )
+        ]],
+        colWidths=[7.0 * inch],
+    )
+    hero.setStyle(
+        TableStyle(
+            [
+                ("BACKGROUND", (0, 0), (-1, -1), colors.HexColor("#0E1A3B")),
+                ("LEFTPADDING", (0, 0), (-1, -1), 18),
+                ("RIGHTPADDING", (0, 0), (-1, -1), 18),
+                ("TOPPADDING", (0, 0), (-1, -1), 18),
+                ("BOTTOMPADDING", (0, 0), (-1, -1), 18),
+            ]
+        )
+    )
+
+    left_body = [Paragraph(summary, styles["BodyText"])]
+    if skills:
+        left_body.append(Spacer(1, 0.08 * inch))
+        left_body.append(Paragraph(" | ".join(skills), styles["BodyText"]))
+    right_body = []
+    for row in certifications or ["No certifications listed"]:
+        right_body.append(Paragraph(row, styles["BulletText"], bulletText="-"))
+    if achievements:
+        right_body.append(Spacer(1, 0.08 * inch))
+        for row in achievements:
+            right_body.append(Paragraph(row, styles["BulletText"], bulletText="-"))
+
+    cards = [
+        hero,
+        Spacer(1, 0.16 * inch),
+    ]
+    left_card = _card("Profile Snapshot", left_body, 3.35 * inch, "#1479C9")
+    right_card = _card("Certifications & Wins", right_body, 3.35 * inch, "#0E1A3B")
+    cards.append(Table([[left_card, right_card]], colWidths=[3.45 * inch, 3.45 * inch]))
+    cards.append(Spacer(1, 0.14 * inch))
+
+    experience_rows: List[Any] = []
+    for item in experience:
+        role = item.get("role") or "Role"
+        company = item.get("company") or "Company"
+        experience_rows.append(Paragraph(f"<b>{role}</b> | {company}", styles["BodyText"]))
+        for bullet in item.get("responsibilities", [])[:3]:
+            experience_rows.append(Paragraph(bullet, styles["BulletText"], bulletText="-"))
+        experience_rows.append(Spacer(1, 0.05 * inch))
+    if not experience_rows:
+        experience_rows.append(Paragraph("Experience will appear here.", styles["BodyText"]))
+
+    education_rows = [Paragraph(item, styles["BodyText"]) for item in education] or [Paragraph("Education pending.", styles["BodyText"])]
+    bottom_left = _card("Experience Highlights", experience_rows, 4.55 * inch, "#18A0AE")
+    bottom_right = _card("Education", education_rows, 2.15 * inch, "#1479C9")
+    cards.append(Table([[bottom_left, bottom_right]], colWidths=[4.65 * inch, 2.25 * inch]))
+    return cards
+
+
+def _build_sample_story(cv_data: Dict[str, Any], styles):
+    story: List[Any] = []
+    name = cv_data.get("name") or "Candidate Name"
+    title = cv_data.get("title") or "Professional Title"
+    meta_parts = [part for part in [cv_data.get("location"), cv_data.get("contact"), cv_data.get("total_it_experience")] if part]
+    story.append(Paragraph(name, ParagraphStyle("SampleName", fontName="Helvetica-Bold", fontSize=24, textColor=colors.HexColor("#102542"), spaceAfter=4)))
+    story.append(Paragraph(title, ParagraphStyle("SampleTitle", fontName="Helvetica", fontSize=12, textColor=colors.HexColor("#1479C9"), spaceAfter=5)))
+    if meta_parts:
+        story.append(Paragraph(" | ".join(meta_parts), styles["MetaText"]))
+    story.append(HRFlowable(width="100%", thickness=2, color=colors.HexColor("#1479C9")))
+    story.append(Spacer(1, 0.12 * inch))
+
+    summary = (cv_data.get("summary") or "").strip()
+    if summary:
+        story.append(Paragraph("Summary", styles["SectionHeading"]))
+        story.append(Paragraph(summary, styles["BodyText"]))
+
+    skills = [str(skill).strip() for skill in cv_data.get("skills", []) if str(skill).strip()]
+    if skills:
+        story.append(Paragraph("Skills", styles["SectionHeading"]))
+        story.append(Paragraph("  •  ".join(skills), styles["BodyText"]))
+
+    story.append(Paragraph("Experience", styles["SectionHeading"]))
+    experience = _normalize_experience(cv_data.get("experience", []))
+    if experience:
+        for item in experience:
+            role = item.get("role") or "Role"
+            company = item.get("company") or "Company"
+            dates = " - ".join(filter(None, [item.get("start_date"), item.get("end_date")]))
+            story.append(Paragraph(f"<b>{role}</b> at {company}", styles["BodyText"]))
+            if dates:
+                story.append(Paragraph(dates, styles["MetaText"]))
+            for bullet in item.get("responsibilities", []):
+                story.append(Paragraph(bullet, styles["BulletText"], bulletText="-"))
+            story.append(Spacer(1, 0.05 * inch))
+    else:
+        story.append(Paragraph("Experience pending.", styles["BodyText"]))
+
+    education = _flatten_education(cv_data.get("education", []))
+    if education:
+        story.append(Paragraph("Education", styles["SectionHeading"]))
+        for item in education:
+            story.append(Paragraph(item, styles["BodyText"]))
+
+    certifications = [str(item).strip() for item in cv_data.get("certifications", []) if str(item).strip()]
+    if certifications:
+        story.append(Paragraph("Certifications", styles["SectionHeading"]))
+        for item in certifications:
+            story.append(Paragraph(item, styles["BulletText"], bulletText="-"))
+
+    return story
+
+
+def generate_pdf(cv_data: Dict[str, Any], output_filename: str | None = None, template_id: str = "custom") -> str:
+    out_path = _create_output_path(cv_data, output_filename)
+    styles = _build_common_pdf_styles()
+    name = cv_data.get("name") or "Candidate Name"
+
+    if template_id == "postcard":
+        story = _build_postcard_story(cv_data, styles)
+    elif template_id == "sample":
+        story = _build_sample_story(cv_data, styles)
+    else:
+        story = _build_custom_story(cv_data, styles)
 
     doc = SimpleDocTemplate(
         out_path,

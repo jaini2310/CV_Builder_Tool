@@ -4,3 +4,9 @@ output/
 .idea/
 streamlit.log
 streamlit.err
+.vscode/
+python-angular-cv-studio/frontend/node_modules/
+python-angular-cv-studio/frontend/.angular/
+templates/~$*.docx
+templates/*.tmp.docx
+.frontend/

@@ -1,0 +1,222 @@
+<div class="page-loader" *ngIf="isPageLoading">
+  <div class="page-loader-card">
+    <div class="page-loader-spinner"></div>
+    <div class="page-loader-title">Loading CV Studio</div>
+    <div class="page-loader-copy">Preparing the workspace and templates.</div>
+  </div>
+</div>
+
+<div class="page-shell" *ngIf="!isPageLoading">
+  <header class="masthead">
+    <div class="masthead-brand">
+      <div class="masthead-logo-wrap">
+        <img src="assets/ntt-logo.png" alt="NTT DATA logo" class="masthead-logo" />
+      </div>
+      <div class="masthead-copy">
+        <div class="masthead-title">NTT DATA Internal CV Studio</div>
+        <div class="masthead-subtitle">Build consultant profiles, capture structured details, and export polished resumes.</div>
+      </div>
+    </div>
+    <div class="masthead-tags">
+      <span class="masthead-tag">Voice-assisted</span>
+      <span class="masthead-tag">DOCX + PDF</span>
+      <span class="masthead-tag">Template-ready</span>
+    </div>
+  </header>
+
+  <section class="metrics">
+    <article>
+      <div class="metric-label">Profile completion</div>
+      <div class="metric-value">{{ completion }}%</div>
+    </article>
+    <article>
+      <div class="metric-label">User responses</div>
+      <div class="metric-value">{{ userResponses }}</div>
+    </article>
+    <article>
+      <div class="metric-label">Skills captured</div>
+      <div class="metric-value">{{ skillsCount }}</div>
+    </article>
+    <article>
+      <div class="metric-label">Experience items</div>
+      <div class="metric-value">{{ experienceCount }}</div>
+    </article>
+  </section>
+
+  <main class="content-grid">
+    <section class="panel">
+      <h2>Conversation Workspace</h2>
+
+      <div class="chat-list">
+        <div class="chat-row" *ngFor="let msg of messages" [class.assistant]="msg.role === 'assistant'" [class.user]="msg.role === 'user'">
+          <div class="chat-role">{{ msg.role }}</div>
+          <div class="chat-text">{{ msg.content }}</div>
+        </div>
+        <div class="chat-row assistant recording-row" *ngIf="micStatusText">
+          <div class="chat-role">assistant</div>
+          <div class="recording-status">
+            <div class="recording-bars" *ngIf="isRecording">
+              <span></span>
+              <span></span>
+              <span></span>
+              <span></span>
+            </div>
+            <div class="chat-text">{{ micStatusText }}</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="composer" [class.recording-mode]="isRecording">
+        <input
+          type="text"
+          [disabled]="isBusy || isConnectingMic || isRecording"
+          [(ngModel)]="composerText"
+          [placeholder]="isRecording ? '' : 'Type your answer'"
+          (keyup.enter)="sendMessage()"
+        />
+        <div class="composer-recording-hint" *ngIf="isRecording">
+          <span class="composer-recording-dot"></span>
+          <span>Recording...</span>
+        </div>
+        <button
+          type="button"
+          class="icon-button mic-button"
+          [class.recording]="isRecording"
+          [disabled]="isBusy || !micSupported || isConnectingMic"
+          (click)="toggleMicRecording()"
+          aria-label="Microphone"
+          title="Microphone"
+        >
+          <span class="icon" *ngIf="isRecording">&#9632;</span>
+          <svg *ngIf="!isRecording" class="icon mic-svg" viewBox="0 0 24 24" aria-hidden="true">
+            <path
+              d="M12 15a3 3 0 0 0 3-3V7a3 3 0 1 0-6 0v5a3 3 0 0 0 3 3Zm5-3a1 1 0 1 1 2 0 7 7 0 0 1-6 6.92V21h3a1 1 0 1 1 0 2H8a1 1 0 1 1 0-2h3v-2.08A7 7 0 0 1 5 12a1 1 0 1 1 2 0 5 5 0 1 0 10 0Z"
+            />
+          </svg>
+        </button>
+        <button
+          type="button"
+          class="icon-button send-button"
+          [disabled]="isBusy || !composerText.trim()"
+          (click)="sendMessage()"
+          aria-label="Send message"
+          title="Send"
+        >
+          <span class="icon" [innerHTML]="'&#10148;'"></span>
+        </button>
+      </div>
+
+      <p class="info" *ngIf="latestTranscript && !isRecording && !isConnectingMic">{{ latestTranscript }}</p>
+      <p class="error" *ngIf="audioNotice">{{ audioNotice }}</p>
+
+      <p class="error" *ngIf="chatError">{{ chatError }}</p>
+    </section>
+
+    <section class="panel">
+      <h2>CV Snapshot</h2>
+
+      <div class="selection-block">
+        <div class="selection-label">Template</div>
+        <div class="template-grid">
+          <button
+            type="button"
+            class="template-card"
+            *ngFor="let option of templateOptions"
+            [class.active]="selectedTemplate === option.id"
+            (click)="selectedTemplate = option.id"
+          >
+            <span class="template-card-title">{{ option.title }}</span>
+            <span class="template-card-copy">{{ option.description }}</span>
+          </button>
+        </div>
+      </div>
+
+      <div class="selection-block">
+        <div class="selection-label">Export format</div>
+        <div class="format-toggle">
+          <button
+            type="button"
+            class="format-chip"
+            [class.active]="selectedExportFormat === 'pdf'"
+            (click)="selectedExportFormat = 'pdf'"
+          >
+            PDF
+          </button>
+          <button
+            type="button"
+            class="format-chip"
+            [class.active]="selectedExportFormat === 'docx'"
+            (click)="selectedExportFormat = 'docx'"
+          >
+            DOCX
+          </button>
+        </div>
+        <p class="format-note" *ngIf="selectedExportFormat === 'docx' && selectedTemplate !== 'custom'">
+          DOCX currently uses the provided Word template. `Postcard` and `Sample` have distinct styled PDF layouts.
+        </p>
+      </div>
+
+      <div class="actions">
+        <button type="button" [disabled]="isBusy" (click)="refreshPreview()">Refresh Preview</button>
+        <button type="button" class="primary" [disabled]="isBusy" (click)="generateCv()">
+          Generate {{ selectedExportFormat.toUpperCase() }}
+        </button>
+      </div>
+
+      <div class="upload-box">
+        <label>Upload profile photo (optional)</label>
+        <input type="file" accept="image/png,image/jpeg" [disabled]="isBusy" (change)="onPhotoSelected($event)" />
+        <p class="info" *ngIf="profilePhotoName">Selected: {{ profilePhotoName }}</p>
+        <button type="button" [disabled]="!profilePhotoBase64" (click)="clearPhoto()">Remove Photo</button>
+      </div>
+
+      <article class="preview-card">
+        <h3>{{ structuredCv?.name || "Candidate name pending" }}</h3>
+        <p>{{ structuredCv?.title || "Current title pending" }}</p>
+        <p *ngIf="structuredCv?.total_it_experience">Total IT experience: {{ structuredCv?.total_it_experience }}</p>
+        <p>{{ structuredCv?.summary || "Summary will appear here as conversation grows." }}</p>
+      </article>
+
+      <article class="preview-card">
+        <h3>Skills</h3>
+        <ul>
+          <li *ngFor="let item of (structuredCv?.skills || [])">{{ item }}</li>
+        </ul>
+      </article>
+
+      <article class="preview-card">
+        <h3>Achievements</h3>
+        <ul>
+          <li *ngFor="let item of (structuredCv?.achievements || [])">{{ item }}</li>
+        </ul>
+      </article>
+
+      <article class="preview-card">
+        <h3>Education</h3>
+        <ul>
+          <li *ngFor="let item of asDisplayList(structuredCv?.education || [])">{{ item }}</li>
+        </ul>
+      </article>
+
+      <article class="preview-card">
+        <h3>Certifications</h3>
+        <ul>
+          <li *ngFor="let item of (structuredCv?.certifications || [])">{{ item }}</li>
+        </ul>
+      </article>
+
+      <article class="preview-card">
+        <h3>Experience</h3>
+        <div class="exp-item" *ngFor="let exp of (structuredCv?.experience || [])">
+          <p><strong>{{ exp.role || "Role pending" }}</strong> at <strong>{{ exp.company || "Company pending" }}</strong></p>
+          <p>{{ exp.start_date || "" }} {{ exp.end_date ? " - " + exp.end_date : "" }}</p>
+          <ul>
+            <li *ngFor="let bullet of (exp.responsibilities || [])">{{ bullet }}</li>
+          </ul>
+        </div>
+      </article>
+
+      <p class="error" *ngIf="previewError">{{ previewError }}</p>
+    </section>
+  </main>
+</div>

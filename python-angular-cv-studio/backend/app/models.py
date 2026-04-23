@@ -1,0 +1,27 @@
+from typing import Any, Dict, List, Optional
+
+from pydantic import BaseModel, Field
+
+
+class ChatMessage(BaseModel):
+    role: str
+    content: str
+
+
+class NextQuestionRequest(BaseModel):
+    messages: List[ChatMessage] = Field(default_factory=list)
+    has_profile_photo: bool = False
+    photo_offer_made: bool = False
+
+
+class ExtractCvRequest(BaseModel):
+    conversation_text: str = ""
+
+
+class GenerateCvRequest(BaseModel):
+    structured_cv: Dict[str, Any] = Field(default_factory=dict)
+    conversation_text: str = ""
+    profile_photo_base64: Optional[str] = None
+    file_name: Optional[str] = None
+    export_format: str = "pdf"
+    template_id: str = "custom"

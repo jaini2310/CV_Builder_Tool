@@ -40,6 +40,7 @@ def get_next_question(messages, has_profile_photo=False, photo_offer_made=False)
     - Professional summary that reflects the candidate's complete IT experience
     - Skills
     - Education
+    - Certifications
     - Achievements
     - Full work experience history with roles and responsibilities
     - Offer an optional profile photo upload once the main CV details are mostly collected
@@ -51,6 +52,7 @@ def get_next_question(messages, has_profile_photo=False, photo_offer_made=False)
     Ask about work experience in one consolidated question whenever possible.
     Do not ask separately for roles and responsibilities after the user has already shared them.
     If responsibilities are already available, ask only for the missing parts such as company name or dates.
+    Ask explicitly for certifications. If the candidate has no certifications, capture that clearly as "none".
     The profile photo is optional. Ask about it at most once, and only after the required CV details have been substantially collected.
     If you ask about the profile photo, tell the user they can upload it using the profile photo uploader in the dashboard.
     Only say the final completion message after all required items have been collected.
@@ -83,6 +85,7 @@ def extract_structured_cv(conversation_text):
 
     Rules:
     - Return JSON only
+    - objectives should capture the user's career objective statement when they mention phrases like "career objective", "objective", "my goal", or "my aim"
     - total_it_experience should capture the candidate's complete IT experience till date
     - summary should be a concise professional summary of the candidate's complete IT experience
     - experience should be a list of objects with:
@@ -128,6 +131,7 @@ def transcribe_audio(audio_bytes, filename="speech.wav"):
     response = client.audio.transcriptions.create(
         model=TRANSCRIBE_MODEL,
         file=audio_stream,
+        language="en",
     )
 
     transcript = getattr(response, "text", "").strip()

@@ -1,0 +1,402 @@
+import { CommonModule } from "@angular/common";
+import { Component, OnInit } from "@angular/core";
+import { FormsModule } from "@angular/forms";
+import { ApiService } from "./api.service";
+import { ChatMessage, CvTemplateId, ExportFormat, StructuredCv } from "./models";
+
+@Component({
+  selector: "app-root",
+  standalone: true,
+  imports: [CommonModule, FormsModule],
+  templateUrl: "./app.component.html",
+})
+export class AppComponent implements OnInit {
+  messages: ChatMessage[] = [
+    {
+      role: "assistant",
+      content: "Hi! I will help you create your CV in NTT Data format.\n\nWhat is your full name?",
+    },
+  ];
+
+  composerText = "";
+  isBusy = false;
+  isConnectingMic = false;
+  isRecording = false;
+  isTranscribingAudio = false;
+  chatError = "";
+  previewError = "";
+  audioNotice = "";
+  interimTranscript = "";
+  latestTranscript = "";
+  micSupported = this.isMicAvailable();
+  selectedTemplate: CvTemplateId = "custom";
+  selectedExportFormat: ExportFormat = "pdf";
+  isPageLoading = true;
+
+  structuredCv: StructuredCv | null = null;
+  profilePhotoBase64 = "";
+  profilePhotoName = "";
+  photoOfferMade = false;
+  readonly templateOptions: Array<{ id: CvTemplateId; title: string; description: string }> = [
+    { id: "custom", title: "Custom", description: "Uses the provided NTT DATA resume structure." },
+    { id: "postcard", title: "Postcard", description: "More visual, compact, and card-led summary layout." },
+    { id: "sample", title: "Sample", description: "Balanced modern sample layout for general sharing." },
+  ];
+
+  private micStream: MediaStream | null = null;
+  private mediaRecorder: MediaRecorder | null = null;
+  private recordedChunks: Blob[] = [];
+  private recordingMimeType = "audio/webm";
+  private micToggleCooldownUntil = 0;
+  private baseComposerText = "";
+
+  constructor(private readonly api: ApiService) {}
+
+  ngOnInit(): void {
+    setTimeout(() => {
+      this.isPageLoading = false;
+    }, 1000);
+  }
+
+  get userResponses(): number {
+    return this.messages.filter((m) => m.role === "user").length;
+  }
+
+  get completion(): number {
+    if (!this.structuredCv) {
+      return 0;
+    }
+    const checks = [
+      !!this.structuredCv.name,
+      !!this.structuredCv.title,
+      !!this.structuredCv.total_it_experience,
+      !!this.structuredCv.summary,
+      !!this.structuredCv.skills?.length,
+      !!this.structuredCv.experience?.length,
+      !!this.structuredCv.education?.length,
+      !!this.structuredCv.achievements?.length,
+    ];
+    const completed = checks.filter(Boolean).length;
+    return Math.round((completed / checks.length) * 100);
+  }
+
+  get skillsCount(): number {
+    return this.structuredCv?.skills?.length ?? 0;
+  }
+
+  get experienceCount(): number {
+    return this.structuredCv?.experience?.length ?? 0;
+  }
+
+  get micStatusText(): string {
+    if (this.isConnectingMic) {
+      return "Connecting microphone...";
+    }
+    if (this.isTranscribingAudio) {
+      return "Transcribing your answer...";
+    }
+    if (this.isRecording) {
+      return "Listening for your answer...";
+    }
+    return "";
+  }
+
+  sendMessage(): void {
+    const cleaned = this.composerText.trim();
+    if (!cleaned || this.isBusy || this.isConnectingMic || this.isRecording) {
+      return;
+    }
+
+    this.chatError = "";
+    this.audioNotice = "";
+    this.messages.push({ role: "user", content: cleaned });
+    this.composerText = "";
+    this.latestTranscript = "";
+    this.isBusy = true;
+
+    this.api
+      .getNextQuestion(this.messages, !!this.profilePhotoBase64, this.photoOfferMade)
+      .subscribe({
+        next: (res) => {
+          const question = (res.question || "").trim();
+          if (question) {
+            this.messages.push({ role: "assistant", content: question });
+            if (question.toLowerCase().includes("photo")) {
+              this.photoOfferMade = true;
+            }
+          }
+          this.refreshPreview();
+        },
+        error: (err) => {
+          this.chatError = err?.error?.detail || "Failed to get next question.";
+          this.isBusy = false;
+        },
+      });
+  }
+
+  refreshPreview(): void {
+    const conversationText = this.buildConversationText();
+    if (!conversationText.trim()) {
+      this.structuredCv = null;
+      this.previewError = "";
+      this.isBusy = false;
+      return;
+    }
+
+    this.api.extractCv(conversationText).subscribe({
+      next: (res) => {
+        this.structuredCv = res.structured_cv;
+        this.previewError = "";
+        this.isBusy = false;
+      },
+      error: (err) => {
+        this.previewError = err?.error?.detail || "Could not refresh CV preview.";
+        this.isBusy = false;
+      },
+    });
+  }
+
+  onPhotoSelected(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    const file = input.files?.[0];
+    if (!file) {
+      return;
+    }
+
+    this.profilePhotoName = file.name;
+    this.photoOfferMade = true;
+
+    const reader = new FileReader();
+    reader.onload = () => {
+      const result = String(reader.result || "");
+      const base64 = result.includes(",") ? result.split(",")[1] : "";
+      this.profilePhotoBase64 = base64;
+    };
+    reader.readAsDataURL(file);
+  }
+
+  clearPhoto(): void {
+    this.profilePhotoBase64 = "";
+    this.profilePhotoName = "";
+  }
+
+  async toggleMicRecording(): Promise<void> {
+    const now = Date.now();
+    if (now < this.micToggleCooldownUntil) {
+      return;
+    }
+    this.micToggleCooldownUntil = now + 350;
+
+    if (!this.micSupported || this.isBusy) {
+      return;
+    }
+
+    if (this.isRecording) {
+      this.stopMicRecording();
+      return;
+    }
+
+    await this.startMicRecording();
+  }
+
+  generateCv(): void {
+    if (this.isBusy || this.isConnectingMic || this.isRecording) {
+      return;
+    }
+
+    const structured = this.structuredCv || {};
+    this.isBusy = true;
+    this.chatError = "";
+
+    this.api
+      .generateCv({
+        structured_cv: structured,
+        conversation_text: this.buildConversationText(),
+        profile_photo_base64: this.profilePhotoBase64 || undefined,
+        file_name: this.getExportFileName(this.selectedExportFormat),
+        export_format: this.selectedExportFormat,
+        template_id: this.selectedTemplate,
+      })
+      .subscribe({
+        next: (response) => {
+          const fallbackName = this.getExportFileName(this.selectedExportFormat);
+          const headerName = this.extractFileName(response.headers.get("content-disposition"));
+          const name = headerName || fallbackName;
+          const blob = response.body;
+          if (!blob) {
+            this.chatError = "Generated file was empty.";
+            this.isBusy = false;
+            return;
+          }
+          const url = window.URL.createObjectURL(blob);
+          const anchor = document.createElement("a");
+          anchor.href = url;
+          anchor.download = name;
+          anchor.click();
+          window.URL.revokeObjectURL(url);
+          this.isBusy = false;
+        },
+        error: (err) => {
+          this.chatError = err?.error?.detail || "CV generation failed.";
+          this.isBusy = false;
+        },
+      });
+  }
+
+  asDisplayList(items: unknown[] | undefined): string[] {
+    if (!items?.length) {
+      return [];
+    }
+    return items
+      .map((item) => {
+        if (typeof item === "string") {
+          return item.trim();
+        }
+        if (item && typeof item === "object" && !Array.isArray(item)) {
+          const values = Object.values(item as Record<string, unknown>)
+            .map((value) => String(value ?? "").trim())
+            .filter((value) => !!value);
+          return values.join(" | ");
+        }
+        return "";
+      })
+      .filter((item) => !!item);
+  }
+
+  private buildConversationText(): string {
+    return this.messages
+      .filter((msg) => msg.role === "user")
+      .map((msg) => `User: ${msg.content}`)
+      .join("\n");
+  }
+
+  private getExportFileName(format: ExportFormat): string {
+    const baseName = (this.structuredCv?.name || "candidate_cv")
+      .trim()
+      .replace(/[^a-zA-Z0-9_-]+/g, "_");
+    return `${baseName || "candidate_cv"}.${format}`;
+  }
+
+  private isMicAvailable(): boolean {
+    if (typeof window === "undefined" || typeof navigator === "undefined") {
+      return false;
+    }
+    return typeof MediaRecorder !== "undefined" && !!navigator.mediaDevices?.getUserMedia;
+  }
+
+  private async startMicRecording(): Promise<void> {
+    this.audioNotice = "";
+    this.chatError = "";
+    this.isConnectingMic = true;
+    this.latestTranscript = "";
+    this.baseComposerText = this.composerText.trim();
+    this.recordedChunks = [];
+
+    try {
+      this.micStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      this.recordingMimeType = this.pickRecordingMimeType();
+      this.mediaRecorder = this.recordingMimeType
+        ? new MediaRecorder(this.micStream, { mimeType: this.recordingMimeType })
+        : new MediaRecorder(this.micStream);
+
+      this.mediaRecorder.addEventListener("dataavailable", (event: BlobEvent) => {
+        if (event.data && event.data.size > 0) {
+          this.recordedChunks.push(event.data);
+        }
+      });
+
+      this.mediaRecorder.addEventListener("stop", () => {
+        void this.transcribeRecordedAudio();
+      });
+
+      this.mediaRecorder.start(250);
+      this.isConnectingMic = false;
+      this.isRecording = true;
+      this.audioNotice = "Recording...";
+    } catch {
+      this.cleanupMicRecording();
+      this.audioNotice = "Microphone could not start. Check browser permission and device.";
+    }
+  }
+
+  private stopMicRecording(): void {
+    if (!this.mediaRecorder) {
+      return;
+    }
+
+    this.isRecording = false;
+    this.isBusy = true;
+    this.isTranscribingAudio = true;
+    this.audioNotice = "Transcribing your answer...";
+
+    if (this.mediaRecorder.state !== "inactive") {
+      this.mediaRecorder.stop();
+    } else {
+      void this.transcribeRecordedAudio();
+    }
+  }
+
+  private async transcribeRecordedAudio(): Promise<void> {
+    const mimeType = this.mediaRecorder?.mimeType || this.recordingMimeType || "audio/webm";
+    const extension = mimeType.includes("ogg") ? "ogg" : "webm";
+    const audioBlob = new Blob(this.recordedChunks, { type: mimeType });
+
+    this.cleanupMicRecording();
+
+    if (!audioBlob.size) {
+      this.audioNotice = "No speech was captured. Please try again.";
+      this.isBusy = false;
+      this.isTranscribingAudio = false;
+      return;
+    }
+
+    const audioFile = new File([audioBlob], `speech.${extension}`, { type: mimeType });
+
+    this.api.transcribeAudio(audioFile).subscribe({
+      next: (res) => {
+        this.latestTranscript = (res.transcript || "").trim();
+        if (this.latestTranscript) {
+          this.composerText = [this.baseComposerText, this.latestTranscript]
+            .filter((part) => !!part)
+            .join(" ")
+            .trim();
+          this.audioNotice = "Transcript added to the message box.";
+        } else {
+          this.audioNotice = "No clear speech was detected. Please try again.";
+        }
+        this.isBusy = false;
+        this.isTranscribingAudio = false;
+      },
+      error: (err) => {
+        this.audioNotice = err?.error?.detail || "Audio transcription failed.";
+        this.isBusy = false;
+        this.isTranscribingAudio = false;
+      },
+    });
+  }
+
+  private cleanupMicRecording(): void {
+    if (this.micStream) {
+      this.micStream.getTracks().forEach((track) => track.stop());
+      this.micStream = null;
+    }
+
+    this.mediaRecorder = null;
+    this.recordedChunks = [];
+    this.isConnectingMic = false;
+    this.isRecording = false;
+  }
+
+  private pickRecordingMimeType(): string {
+    const preferredTypes = ["audio/webm;codecs=opus", "audio/webm", "audio/ogg;codecs=opus"];
+    return preferredTypes.find((type) => MediaRecorder.isTypeSupported(type)) || "";
+  }
+
+  private extractFileName(contentDisposition: string | null): string {
+    if (!contentDisposition) {
+      return "";
+    }
+    const match = contentDisposition.match(/filename="?([^"]+)"?/i);
+    return match?.[1]?.trim() || "";
+  }
+}
