@@ -1,0 +1,155 @@
+<svg width="1600" height="900" viewBox="0 0 1600 900" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1600" y2="900" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#F4F9FF"/>
+      <stop offset="1" stop-color="#EAF6F4"/>
+    </linearGradient>
+    <linearGradient id="titlebar" x1="0" y1="0" x2="1600" y2="0" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#0B75CC"/>
+      <stop offset="1" stop-color="#17B89F"/>
+    </linearGradient>
+    <linearGradient id="nodeFill" x1="0" y1="0" x2="0" y2="1">
+      <stop stop-color="#FFFFFF"/>
+      <stop offset="1" stop-color="#F7FBFF"/>
+    </linearGradient>
+    <filter id="shadow" x="-20%" y="-20%" width="140%" height="160%">
+      <feDropShadow dx="0" dy="10" stdDeviation="14" flood-color="#2E7EBE" flood-opacity="0.16"/>
+    </filter>
+    <marker id="arrow" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto">
+      <path d="M0 0L12 6L0 12V0Z" fill="#4C7396"/>
+    </marker>
+    <style>
+      .title { font: 700 34px 'Segoe UI', Arial, sans-serif; fill: #FFFFFF; }
+      .subtitle { font: 400 16px 'Segoe UI', Arial, sans-serif; fill: #DFF3FF; }
+      .section { font: 700 18px 'Segoe UI', Arial, sans-serif; fill: #0D2038; }
+      .label { font: 700 16px 'Segoe UI', Arial, sans-serif; fill: #0D2038; }
+      .body { font: 400 14px 'Segoe UI', Arial, sans-serif; fill: #4F6278; }
+      .small { font: 600 13px 'Segoe UI', Arial, sans-serif; fill: #1B5F8F; }
+      .pill { font: 700 13px 'Segoe UI', Arial, sans-serif; fill: #13679C; }
+      .decision { font: 700 15px 'Segoe UI', Arial, sans-serif; fill: #0D2038; }
+      .yesno { font: 700 13px 'Segoe UI', Arial, sans-serif; fill: #4C7396; }
+    </style>
+  </defs>
+
+  <rect width="1600" height="900" rx="28" fill="url(#bg)"/>
+
+  <rect x="36" y="30" width="1528" height="104" rx="24" fill="url(#titlebar)" filter="url(#shadow)"/>
+  <rect x="66" y="57" width="168" height="52" rx="16" fill="white" fill-opacity="0.96"/>
+  <text x="150" y="90" text-anchor="middle" class="label" fill="#0B75CC">NTT DATA</text>
+  <text x="270" y="76" class="title">CV Builder Tool Flow</text>
+  <text x="270" y="105" class="subtitle">Existing resume import, guided gap-filling, and multi-template export</text>
+
+  <rect x="1040" y="58" width="146" height="48" rx="24" fill="#EEF8FF"/>
+  <rect x="1200" y="58" width="146" height="48" rx="24" fill="#EEF8FF"/>
+  <rect x="1360" y="58" width="146" height="48" rx="24" fill="#EEF8FF"/>
+  <text x="1113" y="88" text-anchor="middle" class="pill">Voice-assisted</text>
+  <text x="1273" y="88" text-anchor="middle" class="pill">DOCX + PDF</text>
+  <text x="1433" y="88" text-anchor="middle" class="pill">Template-ready</text>
+
+  <text x="70" y="182" class="section">1. Start</text>
+  <text x="600" y="182" class="section">2. Build Structured CV</text>
+  <text x="1120" y="182" class="section">3. Generate Output</text>
+
+  <g filter="url(#shadow)">
+    <rect x="70" y="215" width="220" height="82" rx="18" fill="url(#nodeFill)" stroke="#D3E3EF"/>
+    <text x="180" y="249" text-anchor="middle" class="label">Open CV Builder</text>
+    <text x="180" y="273" text-anchor="middle" class="body">User launches the tool</text>
+  </g>
+
+  <g filter="url(#shadow)">
+    <path d="M380 212L500 255L380 298L260 255L380 212Z" fill="#FFFFFF" stroke="#D3E3EF"/>
+    <text x="380" y="252" text-anchor="middle" class="decision">Choose input mode</text>
+    <text x="380" y="272" text-anchor="middle" class="body">Start from scratch or upload resume</text>
+  </g>
+
+  <g filter="url(#shadow)">
+    <rect x="120" y="368" width="240" height="92" rx="18" fill="url(#nodeFill)" stroke="#D3E3EF"/>
+    <text x="240" y="404" text-anchor="middle" class="label">Guided interview</text>
+    <text x="240" y="428" text-anchor="middle" class="body">Assistant asks the first CV question</text>
+  </g>
+
+  <g filter="url(#shadow)">
+    <rect x="430" y="368" width="240" height="92" rx="18" fill="url(#nodeFill)" stroke="#D3E3EF"/>
+    <text x="550" y="404" text-anchor="middle" class="label">Upload existing resume</text>
+    <text x="550" y="428" text-anchor="middle" class="body">User imports PDF or DOCX resume</text>
+  </g>
+
+  <g filter="url(#shadow)">
+    <rect x="450" y="515" width="260" height="92" rx="18" fill="url(#nodeFill)" stroke="#D3E3EF"/>
+    <text x="580" y="551" text-anchor="middle" class="label">Resume text extraction</text>
+    <text x="580" y="575" text-anchor="middle" class="body">Backend reads resume content and sends it to the LLM</text>
+  </g>
+
+  <g filter="url(#shadow)">
+    <rect x="780" y="232" width="270" height="92" rx="18" fill="url(#nodeFill)" stroke="#D3E3EF"/>
+    <text x="915" y="268" text-anchor="middle" class="label">Structured CV creation</text>
+    <text x="915" y="292" text-anchor="middle" class="body">LLM converts conversation or resume text into CV JSON</text>
+  </g>
+
+  <g filter="url(#shadow)">
+    <rect x="780" y="382" width="270" height="92" rx="18" fill="url(#nodeFill)" stroke="#D3E3EF"/>
+    <text x="915" y="418" text-anchor="middle" class="label">Live CV snapshot</text>
+    <text x="915" y="442" text-anchor="middle" class="body">Preview panel fills skills, experience, education, and summary</text>
+  </g>
+
+  <g filter="url(#shadow)">
+    <path d="M915 533L1045 582L915 631L785 582L915 533Z" fill="#FFFFFF" stroke="#D3E3EF"/>
+    <text x="915" y="578" text-anchor="middle" class="decision">Missing CV details?</text>
+    <text x="915" y="598" text-anchor="middle" class="body">Check required fields</text>
+  </g>
+
+  <g filter="url(#shadow)">
+    <rect x="690" y="700" width="260" height="96" rx="18" fill="url(#nodeFill)" stroke="#D3E3EF"/>
+    <text x="820" y="736" text-anchor="middle" class="label">Ask only what is missing</text>
+    <text x="820" y="760" text-anchor="middle" class="body">User replies by typing or microphone</text>
+  </g>
+
+  <g filter="url(#shadow)">
+    <rect x="1120" y="232" width="200" height="86" rx="18" fill="#F7FBFF" stroke="#A9D0EE"/>
+    <text x="1220" y="266" text-anchor="middle" class="label">Template select</text>
+    <text x="1220" y="289" text-anchor="middle" class="body">Custom / Postcard / Sample</text>
+  </g>
+
+  <g filter="url(#shadow)">
+    <rect x="1350" y="232" width="160" height="86" rx="18" fill="#F7FBFF" stroke="#A9D0EE"/>
+    <text x="1430" y="266" text-anchor="middle" class="label">Format select</text>
+    <text x="1430" y="289" text-anchor="middle" class="body">PDF / DOCX</text>
+  </g>
+
+  <g filter="url(#shadow)">
+    <rect x="1120" y="382" width="390" height="92" rx="18" fill="url(#nodeFill)" stroke="#D3E3EF"/>
+    <text x="1315" y="418" text-anchor="middle" class="label">Generate final CV</text>
+    <text x="1315" y="442" text-anchor="middle" class="body">Backend merges latest structured data, optional photo, template, and format</text>
+  </g>
+
+  <g filter="url(#shadow)">
+    <rect x="1170" y="548" width="290" height="92" rx="18" fill="url(#nodeFill)" stroke="#D3E3EF"/>
+    <text x="1315" y="584" text-anchor="middle" class="label">Download ready output</text>
+    <text x="1315" y="608" text-anchor="middle" class="body">Resume is exported in the selected layout for sharing</text>
+  </g>
+
+  <path d="M290 255H340" stroke="#4C7396" stroke-width="3" marker-end="url(#arrow)"/>
+  <path d="M380 297V346" stroke="#4C7396" stroke-width="3"/>
+  <path d="M380 346H240V356" stroke="#4C7396" stroke-width="3" marker-end="url(#arrow)"/>
+  <path d="M480 300V346H550V356" stroke="#4C7396" stroke-width="3" marker-end="url(#arrow)"/>
+  <path d="M580 460V503" stroke="#4C7396" stroke-width="3" marker-end="url(#arrow)"/>
+  <path d="M360 414H724V278H756" stroke="#4C7396" stroke-width="3" marker-end="url(#arrow)"/>
+  <path d="M710 561H726V294H756" stroke="#4C7396" stroke-width="3" marker-end="url(#arrow)"/>
+  <path d="M915 324V370" stroke="#4C7396" stroke-width="3" marker-end="url(#arrow)"/>
+  <path d="M915 474V521" stroke="#4C7396" stroke-width="3" marker-end="url(#arrow)"/>
+  <path d="M785 582H704V748H690" stroke="#4C7396" stroke-width="3" marker-end="url(#arrow)"/>
+  <path d="M820 700V664H915V649" stroke="#4C7396" stroke-width="3" marker-end="url(#arrow)"/>
+  <path d="M1045 582H1082V428H1106" stroke="#4C7396" stroke-width="3" marker-end="url(#arrow)"/>
+  <path d="M1320 275H1340" stroke="#4C7396" stroke-width="3" marker-end="url(#arrow)"/>
+  <path d="M1220 318V360" stroke="#4C7396" stroke-width="3" marker-end="url(#arrow)"/>
+  <path d="M1430 318V360" stroke="#4C7396" stroke-width="3" marker-end="url(#arrow)"/>
+  <path d="M1315 474V536" stroke="#4C7396" stroke-width="3" marker-end="url(#arrow)"/>
+
+  <text x="322" y="338" class="yesno">Scratch</text>
+  <text x="520" y="338" class="yesno">Import</text>
+  <text x="741" y="577" class="yesno">Yes</text>
+  <text x="1065" y="570" class="yesno">No</text>
+
+  <rect x="70" y="824" width="1460" height="40" rx="14" fill="#FFFFFF" fill-opacity="0.72" stroke="#D8E8F3"/>
+  <text x="800" y="849" text-anchor="middle" class="small">Flow summary: collect from user or resume, structure with LLM, fill only gaps, then export to Custom / Postcard / Sample in PDF or DOCX</text>
+</svg>

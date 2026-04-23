@@ -10,12 +10,14 @@ class ChatMessage(BaseModel):
 
 class NextQuestionRequest(BaseModel):
     messages: List[ChatMessage] = Field(default_factory=list)
+    structured_cv: Dict[str, Any] = Field(default_factory=dict)
     has_profile_photo: bool = False
     photo_offer_made: bool = False
 
 
 class ExtractCvRequest(BaseModel):
     conversation_text: str = ""
+    structured_cv: Dict[str, Any] = Field(default_factory=dict)
 
 
 class GenerateCvRequest(BaseModel):

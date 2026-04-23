@@ -296,6 +296,18 @@ button.primary {
   color: #fff;
 }
 
+button.primary .button-spinner {
+  display: inline-block;
+  width: 0.95rem;
+  height: 0.95rem;
+  margin-right: 0.45rem;
+  border-radius: 999px;
+  border: 2px solid rgba(255, 255, 255, 0.35);
+  border-top-color: #ffffff;
+  vertical-align: -0.1rem;
+  animation: pageLoaderSpin 0.8s linear infinite;
+}
+
 .icon-button {
   width: 2.75rem;
   min-width: 2.75rem;
@@ -434,6 +446,10 @@ button:disabled {
   border-radius: 12px;
   padding: 0.7rem;
   margin-bottom: 0.8rem;
+}
+
+.resume-import-box {
+  background: linear-gradient(180deg, #f8fbff, #f1f7fd);
 }
 
 .upload-box label,

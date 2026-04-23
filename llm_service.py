@@ -20,9 +20,12 @@ MODEL = "gpt-4o-mini"   # replace if your enterprise model name is different
 TRANSCRIBE_MODEL = os.getenv("OPENAI_TRANSCRIBE_MODEL", "gpt-4o-mini-transcribe")
 
 
-def get_next_question(messages, has_profile_photo=False, photo_offer_made=False):
+def get_next_question(messages, has_profile_photo=False, photo_offer_made=False, structured_cv=None):
     photo_status = "A profile photo has already been uploaded." if has_profile_photo else "No profile photo has been uploaded yet."
     photo_prompt_status = "The profile photo option has already been offered once." if photo_offer_made else "The profile photo option has not been offered yet."
+    structured_cv = structured_cv or {}
+    populated_snapshot = {key: value for key, value in structured_cv.items() if value not in ("", [], {}, None)}
+    structured_cv_snapshot = json.dumps(populated_snapshot, ensure_ascii=False, indent=2) if populated_snapshot else "No structured CV snapshot is available yet."
 
     system_prompt = """
     You are a professional CV assistant.
@@ -58,7 +61,7 @@ def get_next_question(messages, has_profile_photo=False, photo_offer_made=False)
     Only say the final completion message after all required items have been collected.
 
     If enough information is collected, reply exactly:
-    Thank you. Click 'Generate CV' to create your resume.
+    Thank you. Click on 'Generate' to create your resume.
     """
 
     response = client.chat.completions.create(
@@ -66,7 +69,10 @@ def get_next_question(messages, has_profile_photo=False, photo_offer_made=False)
         messages=[
             {
                 "role": "system",
-                "content": f"{system_prompt}\n\nCurrent photo status: {photo_status}\n{photo_prompt_status}",
+                "content": (
+                    f"{system_prompt}\n\nCurrent photo status: {photo_status}\n{photo_prompt_status}"
+                    f"\n\nCurrent structured CV snapshot:\n{structured_cv_snapshot}"
+                ),
             }
         ]
         + messages,

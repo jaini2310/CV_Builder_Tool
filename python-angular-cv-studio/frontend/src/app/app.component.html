@@ -47,6 +47,12 @@
     <section class="panel">
       <h2>Conversation Workspace</h2>
 
+      <div class="upload-box resume-import-box">
+        <label>Upload existing CV or resume</label>
+        <input type="file" accept=".pdf,.docx,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document" [disabled]="isBusy || isConnectingMic || isRecording" (change)="onResumeSelected($event)" />
+        <p class="info" *ngIf="importedResumeName">Imported resume: {{ importedResumeName }}</p>
+      </div>
+
       <div class="chat-list">
         <div class="chat-row" *ngFor="let msg of messages" [class.assistant]="msg.role === 'assistant'" [class.user]="msg.role === 'user'">
           <div class="chat-role">{{ msg.role }}</div>
@@ -159,7 +165,8 @@
       <div class="actions">
         <button type="button" [disabled]="isBusy" (click)="refreshPreview()">Refresh Preview</button>
         <button type="button" class="primary" [disabled]="isBusy" (click)="generateCv()">
-          Generate {{ selectedExportFormat.toUpperCase() }}
+          <span class="button-spinner" *ngIf="isGeneratingCv"></span>
+          <span>{{ isGeneratingCv ? ('Generating ' + selectedExportFormat.toUpperCase() + '...') : ('Generate ' + selectedExportFormat.toUpperCase()) }}</span>
         </button>
       </div>
 

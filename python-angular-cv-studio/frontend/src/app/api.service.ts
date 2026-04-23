@@ -9,20 +9,29 @@ export class ApiService {
 
   getNextQuestion(
     messages: ChatMessage[],
+    structuredCv: StructuredCv | null,
     hasProfilePhoto: boolean,
     photoOfferMade: boolean,
   ): Observable<{ question: string }> {
     return this.http.post<{ question: string }>("/api/next-question", {
       messages,
+      structured_cv: structuredCv || {},
       has_profile_photo: hasProfilePhoto,
       photo_offer_made: photoOfferMade,
     });
   }
 
-  extractCv(conversationText: string): Observable<{ structured_cv: StructuredCv | null }> {
+  extractCv(conversationText: string, structuredCv: StructuredCv | null): Observable<{ structured_cv: StructuredCv | null }> {
     return this.http.post<{ structured_cv: StructuredCv | null }>("/api/extract-cv", {
       conversation_text: conversationText,
+      structured_cv: structuredCv || {},
     });
+  }
+
+  importResume(file: File): Observable<{ structured_cv: StructuredCv; next_question: string; file_name: string }> {
+    const formData = new FormData();
+    formData.append("resume_file", file);
+    return this.http.post<{ structured_cv: StructuredCv; next_question: string; file_name: string }>("/api/import-resume", formData);
   }
 
   transcribeAudio(file: File): Observable<{ transcript: string }> {

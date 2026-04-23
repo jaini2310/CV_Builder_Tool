@@ -23,6 +23,7 @@ export class AppComponent implements OnInit {
   isConnectingMic = false;
   isRecording = false;
   isTranscribingAudio = false;
+  isGeneratingCv = false;
   chatError = "";
   previewError = "";
   audioNotice = "";
@@ -36,6 +37,7 @@ export class AppComponent implements OnInit {
   structuredCv: StructuredCv | null = null;
   profilePhotoBase64 = "";
   profilePhotoName = "";
+  importedResumeName = "";
   photoOfferMade = false;
   readonly templateOptions: Array<{ id: CvTemplateId; title: string; description: string }> = [
     { id: "custom", title: "Custom", description: "Uses the provided NTT DATA resume structure." },
@@ -115,7 +117,7 @@ export class AppComponent implements OnInit {
     this.isBusy = true;
 
     this.api
-      .getNextQuestion(this.messages, !!this.profilePhotoBase64, this.photoOfferMade)
+      .getNextQuestion(this.messages, this.structuredCv, !!this.profilePhotoBase64, this.photoOfferMade)
       .subscribe({
         next: (res) => {
           const question = (res.question || "").trim();
@@ -143,7 +145,7 @@ export class AppComponent implements OnInit {
       return;
     }
 
-    this.api.extractCv(conversationText).subscribe({
+    this.api.extractCv(conversationText, this.structuredCv).subscribe({
       next: (res) => {
         this.structuredCv = res.structured_cv;
         this.previewError = "";
@@ -173,6 +175,49 @@ export class AppComponent implements OnInit {
       this.profilePhotoBase64 = base64;
     };
     reader.readAsDataURL(file);
+  }
+
+  onResumeSelected(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    const file = input.files?.[0];
+    if (!file) {
+      return;
+    }
+
+    this.isBusy = true;
+    this.chatError = "";
+    this.previewError = "";
+    this.audioNotice = "";
+
+    this.api.importResume(file).subscribe({
+      next: (res) => {
+        this.structuredCv = res.structured_cv;
+        this.importedResumeName = res.file_name || file.name;
+        this.photoOfferMade = false;
+        this.messages = [
+          {
+            role: "assistant",
+            content: `I reviewed your uploaded resume${this.importedResumeName ? ` (${this.importedResumeName})` : ""} and mapped the available details into the CV workspace.`,
+          },
+        ];
+
+        const question = (res.next_question || "").trim();
+        if (question) {
+          this.messages.push({ role: "assistant", content: question });
+          if (question.toLowerCase().includes("photo")) {
+            this.photoOfferMade = true;
+          }
+        }
+
+        this.composerText = "";
+        this.latestTranscript = "";
+        this.isBusy = false;
+      },
+      error: (err) => {
+        this.chatError = err?.error?.detail || "Resume import failed.";
+        this.isBusy = false;
+      },
+    });
   }
 
   clearPhoto(): void {
@@ -206,6 +251,7 @@ export class AppComponent implements OnInit {
 
     const structured = this.structuredCv || {};
     this.isBusy = true;
+    this.isGeneratingCv = true;
     this.chatError = "";
 
     this.api
@@ -226,6 +272,7 @@ export class AppComponent implements OnInit {
           if (!blob) {
             this.chatError = "Generated file was empty.";
             this.isBusy = false;
+            this.isGeneratingCv = false;
             return;
           }
           const url = window.URL.createObjectURL(blob);
@@ -235,10 +282,12 @@ export class AppComponent implements OnInit {
           anchor.click();
           window.URL.revokeObjectURL(url);
           this.isBusy = false;
+          this.isGeneratingCv = false;
         },
         error: (err) => {
           this.chatError = err?.error?.detail || "CV generation failed.";
           this.isBusy = false;
+          this.isGeneratingCv = false;
         },
       });
   }

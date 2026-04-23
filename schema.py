@@ -37,3 +37,20 @@ class CVSchema(BaseModel):
     education: List[Union[str, Dict[str, Any]]] = Field(default_factory=list)
     achievements: List[str] = Field(default_factory=list)
     certifications: List[str] = Field(default_factory=list)
+
+    @field_validator("contact", mode="before")
+    @classmethod
+    def normalize_contact(cls, value):
+        if value in (None, ""):
+            return ""
+        if isinstance(value, dict):
+            ordered_keys = ["email", "phone", "mobile", "linkedin", "website"]
+            parts = []
+            for key in ordered_keys:
+                item = value.get(key)
+                if item and str(item).strip():
+                    parts.append(str(item).strip())
+            if not parts:
+                parts = [str(item).strip() for item in value.values() if str(item).strip()]
+            return " | ".join(parts)
+        return str(value).strip()
