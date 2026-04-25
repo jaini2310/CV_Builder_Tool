@@ -6,6 +6,14 @@
   </div>
 </div>
 
+<div class="action-overlay" *ngIf="isImportingResume">
+  <div class="action-overlay-card">
+    <div class="page-loader-spinner action-overlay-spinner"></div>
+    <div class="action-overlay-title">Reviewing your resume</div>
+    <div class="action-overlay-copy">Extracting content, structuring the CV, and preparing follow-up questions.</div>
+  </div>
+</div>
+
 <div class="page-shell" *ngIf="!isPageLoading">
   <header class="masthead">
     <div class="masthead-brand">
@@ -49,8 +57,16 @@
 
       <div class="upload-box resume-import-box">
         <label>Upload existing CV or resume</label>
-        <input type="file" accept=".pdf,.docx,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document" [disabled]="isBusy || isConnectingMic || isRecording" (change)="onResumeSelected($event)" />
-        <p class="info" *ngIf="importedResumeName">Imported resume: {{ importedResumeName }}</p>
+        <div class="upload-control">
+          <label class="upload-trigger" [class.disabled]="isBusy || isConnectingMic || isRecording">
+            <svg class="upload-trigger-icon" viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M12 3a1 1 0 0 1 1 1v8.59l2.3-2.29a1 1 0 1 1 1.4 1.41l-4 4a1 1 0 0 1-1.4 0l-4-4a1 1 0 1 1 1.4-1.41L11 12.59V4a1 1 0 0 1 1-1Zm-7 14a1 1 0 0 1 1 1v1h12v-1a1 1 0 1 1 2 0v2a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1v-2a1 1 0 0 1 1-1Z"/>
+            </svg>
+            <span>Choose Resume</span>
+            <input class="upload-input" type="file" accept=".pdf,.docx,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document" [disabled]="isBusy || isConnectingMic || isRecording" (change)="onResumeSelected($event)" />
+          </label>
+          <span class="upload-meta">{{ importedResumeName || "PDF or DOCX supported" }}</span>
+        </div>
       </div>
 
       <div class="chat-list">
@@ -172,8 +188,16 @@
 
       <div class="upload-box">
         <label>Upload profile photo (optional)</label>
-        <input type="file" accept="image/png,image/jpeg" [disabled]="isBusy" (change)="onPhotoSelected($event)" />
-        <p class="info" *ngIf="profilePhotoName">Selected: {{ profilePhotoName }}</p>
+        <div class="upload-control">
+          <label class="upload-trigger" [class.disabled]="isBusy">
+            <svg class="upload-trigger-icon" viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M12 5a3 3 0 1 1-3 3 3 3 0 0 1 3-3Zm0-3a1 1 0 0 1 .95.68l.36 1.08a1 1 0 0 0 .95.69H16a3 3 0 0 1 3 3v8a3 3 0 0 1-3 3H8a3 3 0 0 1-3-3V7a3 3 0 0 1 3-3h1.74a1 1 0 0 0 .95-.69l.36-1.08A1 1 0 0 1 12 2Zm0 5a4 4 0 1 0 4 4 4 4 0 0 0-4-4Z"/>
+            </svg>
+            <span>Choose Photo</span>
+            <input class="upload-input" type="file" accept="image/png,image/jpeg" [disabled]="isBusy" (change)="onPhotoSelected($event)" />
+          </label>
+          <span class="upload-meta">{{ profilePhotoName || "PNG or JPG supported" }}</span>
+        </div>
         <button type="button" [disabled]="!profilePhotoBase64" (click)="clearPhoto()">Remove Photo</button>
       </div>
 

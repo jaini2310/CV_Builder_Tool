@@ -24,6 +24,7 @@ export class AppComponent implements OnInit {
   isRecording = false;
   isTranscribingAudio = false;
   isGeneratingCv = false;
+  isImportingResume = false;
   chatError = "";
   previewError = "";
   audioNotice = "";
@@ -185,6 +186,7 @@ export class AppComponent implements OnInit {
     }
 
     this.isBusy = true;
+    this.isImportingResume = true;
     this.chatError = "";
     this.previewError = "";
     this.audioNotice = "";
@@ -212,10 +214,12 @@ export class AppComponent implements OnInit {
         this.composerText = "";
         this.latestTranscript = "";
         this.isBusy = false;
+        this.isImportingResume = false;
       },
       error: (err) => {
         this.chatError = err?.error?.detail || "Resume import failed.";
         this.isBusy = false;
+        this.isImportingResume = false;
       },
     });
   }
