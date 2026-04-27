@@ -13,6 +13,7 @@ class NextQuestionRequest(BaseModel):
     structured_cv: Dict[str, Any] = Field(default_factory=dict)
     has_profile_photo: bool = False
     photo_offer_made: bool = False
+    preferred_language: str = "English"
 
 
 class ExtractCvRequest(BaseModel):

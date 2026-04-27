@@ -1,16 +1,16 @@
 <div class="page-loader" *ngIf="isPageLoading">
   <div class="page-loader-card">
     <div class="page-loader-spinner"></div>
-    <div class="page-loader-title">Loading CV Studio</div>
-    <div class="page-loader-copy">Preparing the workspace and templates.</div>
+    <div class="page-loader-title">{{ t("loadingTitle") }}</div>
+    <div class="page-loader-copy">{{ t("loadingCopy") }}</div>
   </div>
 </div>
 
 <div class="action-overlay" *ngIf="isImportingResume">
   <div class="action-overlay-card">
     <div class="page-loader-spinner action-overlay-spinner"></div>
-    <div class="action-overlay-title">Reviewing your resume</div>
-    <div class="action-overlay-copy">Extracting content, structuring the CV, and preparing follow-up questions.</div>
+    <div class="action-overlay-title">{{ t("reviewingResume") }}</div>
+    <div class="action-overlay-copy">{{ t("reviewingResumeCopy") }}</div>
   </div>
 </div>
 
@@ -18,96 +18,96 @@
   <div class="action-overlay-card edit-overlay-card">
     <div class="edit-header">
       <div>
-        <div class="action-overlay-title">Edit CV fields</div>
-        <div class="action-overlay-copy">Update the preview directly without typing a chat prompt.</div>
+        <div class="action-overlay-title">{{ t("editCvFields") }}</div>
+        <div class="action-overlay-copy">{{ t("editCvCopy") }}</div>
       </div>
-      <button type="button" class="edit-close-button" [disabled]="isSavingCv" (click)="closeEditCv()">Close</button>
+      <button type="button" class="edit-close-button" [disabled]="isSavingCv" (click)="closeEditCv()">{{ t("close") }}</button>
     </div>
 
     <div class="edit-grid">
       <label class="edit-field">
-        <span>Career objective</span>
+        <span>{{ t("careerObjective") }}</span>
         <textarea [(ngModel)]="editDraft.objectives" rows="2"></textarea>
       </label>
       <label class="edit-field">
-        <span>Full name</span>
+        <span>{{ t("fullName") }}</span>
         <input type="text" [(ngModel)]="editDraft.name" />
       </label>
       <label class="edit-field">
-        <span>Title</span>
+        <span>{{ t("title") }}</span>
         <input type="text" [(ngModel)]="editDraft.title" />
       </label>
       <label class="edit-field">
-        <span>Total IT experience</span>
+        <span>{{ t("totalItExperience") }}</span>
         <input type="text" [(ngModel)]="editDraft.total_it_experience" />
       </label>
       <label class="edit-field">
-        <span>Contact</span>
+        <span>{{ t("contact") }}</span>
         <input type="text" [(ngModel)]="editDraft.contact" />
       </label>
       <label class="edit-field">
-        <span>Location</span>
+        <span>{{ t("location") }}</span>
         <input type="text" [(ngModel)]="editDraft.location" />
       </label>
       <label class="edit-field edit-field-full">
-        <span>Summary</span>
+        <span>{{ t("summary") }}</span>
         <textarea [(ngModel)]="editDraft.summary" rows="4"></textarea>
       </label>
       <label class="edit-field">
-        <span>Skills</span>
-        <textarea [(ngModel)]="editDraft.skillsText" rows="4" placeholder="Comma or new line separated"></textarea>
+        <span>{{ t("skills") }}</span>
+        <textarea [(ngModel)]="editDraft.skillsText" rows="4" [placeholder]="t('commaOrNewLineSeparated')"></textarea>
       </label>
       <label class="edit-field">
-        <span>Certifications</span>
-        <textarea [(ngModel)]="editDraft.certificationsText" rows="4" placeholder="One per line"></textarea>
+        <span>{{ t("certifications") }}</span>
+        <textarea [(ngModel)]="editDraft.certificationsText" rows="4" [placeholder]="t('onePerLine')"></textarea>
       </label>
       <label class="edit-field">
-        <span>Achievements</span>
-        <textarea [(ngModel)]="editDraft.achievementsText" rows="4" placeholder="One per line"></textarea>
+        <span>{{ t("achievements") }}</span>
+        <textarea [(ngModel)]="editDraft.achievementsText" rows="4" [placeholder]="t('onePerLine')"></textarea>
       </label>
       <label class="edit-field">
-        <span>Education</span>
-        <textarea [(ngModel)]="editDraft.educationText" rows="4" placeholder="One per line"></textarea>
+        <span>{{ t("education") }}</span>
+        <textarea [(ngModel)]="editDraft.educationText" rows="4" [placeholder]="t('onePerLine')"></textarea>
       </label>
     </div>
 
     <div class="experience-editor">
       <div class="experience-editor-header">
-        <span>Experience</span>
-        <button type="button" [disabled]="isSavingCv" (click)="addExperienceDraft()">Add Experience</button>
+        <span>{{ t("experience") }}</span>
+        <button type="button" [disabled]="isSavingCv" (click)="addExperienceDraft()">{{ t("addExperience") }}</button>
       </div>
       <div class="experience-edit-card" *ngFor="let exp of editDraft.experienceDrafts; let i = index">
         <div class="experience-edit-grid">
           <label class="edit-field">
-            <span>Company</span>
+            <span>{{ t("company") }}</span>
             <input type="text" [(ngModel)]="exp.company" />
           </label>
           <label class="edit-field">
-            <span>Role</span>
+            <span>{{ t("role") }}</span>
             <input type="text" [(ngModel)]="exp.role" />
           </label>
           <label class="edit-field">
-            <span>Start date</span>
+            <span>{{ t("startDate") }}</span>
             <input type="text" [(ngModel)]="exp.start_date" />
           </label>
           <label class="edit-field">
-            <span>End date</span>
+            <span>{{ t("endDate") }}</span>
             <input type="text" [(ngModel)]="exp.end_date" />
           </label>
           <label class="edit-field edit-field-full">
-            <span>Responsibilities</span>
-            <textarea [(ngModel)]="exp.responsibilitiesText" rows="4" placeholder="One per line"></textarea>
+            <span>{{ t("responsibilities") }}</span>
+            <textarea [(ngModel)]="exp.responsibilitiesText" rows="4" [placeholder]="t('onePerLine')"></textarea>
           </label>
         </div>
-        <button type="button" class="remove-exp-button" [disabled]="isSavingCv" (click)="removeExperienceDraft(i)">Remove</button>
+        <button type="button" class="remove-exp-button" [disabled]="isSavingCv" (click)="removeExperienceDraft(i)">{{ t("remove") }}</button>
       </div>
     </div>
 
     <div class="edit-actions">
-      <button type="button" [disabled]="isSavingCv" (click)="closeEditCv()">Cancel</button>
+      <button type="button" [disabled]="isSavingCv" (click)="closeEditCv()">{{ t("cancel") }}</button>
       <button type="button" class="primary" [disabled]="isSavingCv" (click)="saveEditCv()">
-        <span *ngIf="!isSavingCv">Save Changes</span>
-        <span *ngIf="isSavingCv">Saving...</span>
+        <span *ngIf="!isSavingCv">{{ t("saveChanges") }}</span>
+        <span *ngIf="isSavingCv">{{ t("saving") }}</span>
       </button>
     </div>
   </div>
@@ -120,61 +120,69 @@
         <img src="assets/ntt-logo.png" alt="NTT DATA logo" class="masthead-logo" />
       </div>
       <div class="masthead-copy">
-        <div class="masthead-title">NTT DATA Internal CV Studio</div>
-        <div class="masthead-subtitle">Build consultant profiles, capture structured details, and export polished resumes.</div>
+        <div class="masthead-title">{{ t("siteTitle") }}</div>
+        <div class="masthead-subtitle">{{ t("siteSubtitle") }}</div>
       </div>
     </div>
-    <div class="masthead-tags">
-      <span class="masthead-tag">Voice-assisted</span>
-      <span class="masthead-tag">DOCX + PDF</span>
-      <span class="masthead-tag">Template-ready</span>
+    <div class="masthead-tools">
+      <label class="language-picker">
+        <span>{{ t("language") }}</span>
+        <select [(ngModel)]="selectedLanguage" (change)="onLanguageChange()">
+          <option *ngFor="let option of languageOptions" [ngValue]="option.code">{{ option.label }}</option>
+        </select>
+      </label>
+      <div class="masthead-tags">
+        <span class="masthead-tag">{{ t("tagVoice") }}</span>
+        <span class="masthead-tag">{{ t("tagExport") }}</span>
+        <span class="masthead-tag">{{ t("tagTemplate") }}</span>
+      </div>
     </div>
   </header>
 
   <section class="metrics">
     <article>
-      <div class="metric-label">Profile completion</div>
+      <div class="metric-label">{{ t("profileCompletion") }}</div>
       <div class="metric-value">{{ completion }}%</div>
     </article>
     <article>
-      <div class="metric-label">User responses</div>
+      <div class="metric-label">{{ t("userResponses") }}</div>
       <div class="metric-value">{{ userResponses }}</div>
     </article>
     <article>
-      <div class="metric-label">Skills captured</div>
+      <div class="metric-label">{{ t("skillsCaptured") }}</div>
       <div class="metric-value">{{ skillsCount }}</div>
     </article>
     <article>
-      <div class="metric-label">Experience items</div>
+      <div class="metric-label">{{ t("experienceItems") }}</div>
       <div class="metric-value">{{ experienceCount }}</div>
     </article>
   </section>
 
   <main class="content-grid">
     <section class="panel">
-      <h2>Conversation Workspace</h2>
+      <h2>{{ t("conversationWorkspace") }}</h2>
 
       <div class="upload-box resume-import-box">
-        <label>Upload existing CV or resume</label>
+        <label>{{ t("uploadResume") }}</label>
         <div class="upload-control">
           <label class="upload-trigger" [class.disabled]="isBusy || isConnectingMic || isRecording">
             <svg class="upload-trigger-icon" viewBox="0 0 24 24" aria-hidden="true">
               <path d="M12 3a1 1 0 0 1 1 1v8.59l2.3-2.29a1 1 0 1 1 1.4 1.41l-4 4a1 1 0 0 1-1.4 0l-4-4a1 1 0 1 1 1.4-1.41L11 12.59V4a1 1 0 0 1 1-1Zm-7 14a1 1 0 0 1 1 1v1h12v-1a1 1 0 1 1 2 0v2a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1v-2a1 1 0 0 1 1-1Z"/>
             </svg>
-            <span>Choose Resume</span>
+            <span>{{ t("chooseResume") }}</span>
             <input class="upload-input" type="file" accept=".pdf,.docx,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document" [disabled]="isBusy || isConnectingMic || isRecording" (change)="onResumeSelected($event)" />
           </label>
-          <span class="upload-meta">{{ importedResumeName || "PDF or DOCX supported" }}</span>
+          <span class="upload-meta">{{ importedResumeName || t("resumeSupported") }}</span>
         </div>
       </div>
 
       <div class="chat-list">
         <div class="chat-row" *ngFor="let msg of messages" [class.assistant]="msg.role === 'assistant'" [class.user]="msg.role === 'user'">
-          <div class="chat-role">{{ msg.role }}</div>
+          <div class="chat-role">{{ getRoleLabel(msg.role) }}</div>
           <div class="chat-text">{{ msg.content }}</div>
         </div>
         <div class="chat-row assistant recording-row" *ngIf="micStatusText">
-          <div class="chat-role">assistant</div>
+          <div class="chat-role">{{ t("assistantRole") }}</div>
           <div class="recording-status">
             <div class="recording-bars" *ngIf="isRecording">
               <span></span>
@@ -192,12 +200,12 @@
           type="text"
           [disabled]="isBusy || isConnectingMic || isRecording"
           [(ngModel)]="composerText"
-          [placeholder]="isRecording ? '' : 'Type your answer'"
+          [placeholder]="isRecording ? '' : t('typeYourAnswer')"
           (keyup.enter)="sendMessage()"
         />
         <div class="composer-recording-hint" *ngIf="isRecording">
           <span class="composer-recording-dot"></span>
-          <span>Recording...</span>
+          <span>{{ t("recording") }}</span>
         </div>
         <button
           type="button"
@@ -205,8 +213,8 @@
           [class.recording]="isRecording"
           [disabled]="isBusy || !micSupported || isConnectingMic"
           (click)="toggleMicRecording()"
-          aria-label="Microphone"
-          title="Microphone"
+          [attr.aria-label]="t('microphone')"
+          [title]="t('microphone')"
         >
           <span class="icon" *ngIf="isRecording">&#9632;</span>
           <svg *ngIf="!isRecording" class="icon mic-svg" viewBox="0 0 24 24" aria-hidden="true">
@@ -220,8 +228,8 @@
           class="icon-button send-button"
           [disabled]="isBusy || !composerText.trim()"
           (click)="sendMessage()"
-          aria-label="Send message"
-          title="Send"
+          [attr.aria-label]="t('send')"
+          [title]="t('send')"
         >
           <span class="icon" [innerHTML]="'&#10148;'"></span>
         </button>
@@ -235,15 +243,15 @@
 
     <section class="panel">
       <div class="panel-header">
-        <h2>CV Snapshot</h2>
+        <h2>{{ t("cvSnapshot") }}</h2>
         <button
           *ngIf="hasPreviewContent"
           type="button"
           class="preview-edit-button"
           [disabled]="isBusy"
           (click)="openEditCv()"
-          aria-label="Edit CV"
-          title="Edit CV"
+          [attr.aria-label]="t('editCv')"
+          [title]="t('editCv')"
         >
           <svg viewBox="0 0 24 24" aria-hidden="true">
             <path d="M15.86 3.39a2.1 2.1 0 0 1 2.97 0l1.78 1.78a2.1 2.1 0 0 1 0 2.97l-9.6 9.6a1 1 0 0 1-.46.27l-4.4 1.1a1 1 0 0 1-1.22-1.22l1.1-4.4a1 1 0 0 1 .27-.46Zm1.56 1.41-9.1 9.1-.62 2.49 2.49-.62 9.1-9.1a.1.1 0 0 0 0-.14L17.5 4.8a.1.1 0 0 0-.14 0ZM4 20a1 1 0 0 1 1-1h14a1 1 0 1 1 0 2H5a1 1 0 0 1-1-1Z"/>
@@ -252,23 +260,23 @@
       </div>
 
       <div class="selection-block">
-        <div class="selection-label">Template</div>
+        <div class="selection-label">{{ t("template") }}</div>
         <div class="template-grid">
           <button
             type="button"
             class="template-card"
             *ngFor="let option of templateOptions"
-            [class.active]="selectedTemplate === option.id"
-            (click)="selectedTemplate = option.id"
+            [class.active]="selectedTemplate === option"
+            (click)="selectedTemplate = option"
           >
-            <span class="template-card-title">{{ option.title }}</span>
-            <span class="template-card-copy">{{ option.description }}</span>
+            <span class="template-card-title">{{ getTemplateTitle(option) }}</span>
+            <span class="template-card-copy">{{ getTemplateDescription(option) }}</span>
           </button>
         </div>
       </div>
 
       <div class="selection-block">
-        <div class="selection-label">Export format</div>
+        <div class="selection-label">{{ t("exportFormat") }}</div>
         <div class="format-toggle">
           <button
             type="button"
@@ -287,73 +295,71 @@
             DOCX
           </button>
         </div>
-        <p class="format-note" *ngIf="selectedExportFormat === 'docx' && selectedTemplate !== 'custom'">
-          DOCX currently uses the provided Word template. `Postcard` and `Sample` have distinct styled PDF layouts.
-        </p>
+        <p class="format-note" *ngIf="selectedExportFormat === 'docx' && selectedTemplate !== 'custom'">{{ t("docxNote") }}</p>
       </div>
 
       <div class="actions">
-        <button type="button" [disabled]="isBusy" (click)="refreshPreview()">Refresh Preview</button>
+        <button type="button" [disabled]="isBusy" (click)="refreshPreview()">{{ t("refreshPreview") }}</button>
         <button type="button" class="primary" [disabled]="isBusy" (click)="generateCv()">
           <span class="button-spinner" *ngIf="isGeneratingCv"></span>
-          <span>{{ isGeneratingCv ? ('Generating ' + selectedExportFormat.toUpperCase() + '...') : ('Generate ' + selectedExportFormat.toUpperCase()) }}</span>
+          <span>{{ isGeneratingCv ? (t("generating") + " " + selectedExportFormat.toUpperCase() + "...") : (t("generate") + " " + selectedExportFormat.toUpperCase()) }}</span>
         </button>
       </div>
 
       <div class="upload-box">
-        <label>Upload profile photo (optional)</label>
+        <label>{{ t("uploadPhoto") }}</label>
         <div class="upload-control">
           <label class="upload-trigger" [class.disabled]="isBusy">
             <svg class="upload-trigger-icon" viewBox="0 0 24 24" aria-hidden="true">
               <path d="M12 5a3 3 0 1 1-3 3 3 3 0 0 1 3-3Zm0-3a1 1 0 0 1 .95.68l.36 1.08a1 1 0 0 0 .95.69H16a3 3 0 0 1 3 3v8a3 3 0 0 1-3 3H8a3 3 0 0 1-3-3V7a3 3 0 0 1 3-3h1.74a1 1 0 0 0 .95-.69l.36-1.08A1 1 0 0 1 12 2Zm0 5a4 4 0 1 0 4 4 4 4 0 0 0-4-4Z"/>
             </svg>
-            <span>Choose Photo</span>
+            <span>{{ t("choosePhoto") }}</span>
             <input class="upload-input" type="file" accept="image/png,image/jpeg" [disabled]="isBusy" (change)="onPhotoSelected($event)" />
           </label>
-          <span class="upload-meta">{{ profilePhotoName || "PNG or JPG supported" }}</span>
+          <span class="upload-meta">{{ profilePhotoName || t("photoSupported") }}</span>
         </div>
-        <button type="button" [disabled]="!profilePhotoBase64" (click)="clearPhoto()">Remove Photo</button>
+        <button type="button" [disabled]="!profilePhotoBase64" (click)="clearPhoto()">{{ t("removePhoto") }}</button>
       </div>
 
       <article class="preview-card">
-        <h3>{{ structuredCv?.name || "Candidate name pending" }}</h3>
-        <p>{{ structuredCv?.title || "Current title pending" }}</p>
-        <p *ngIf="structuredCv?.total_it_experience">Total IT experience: {{ structuredCv?.total_it_experience }}</p>
-        <p>{{ structuredCv?.summary || "Summary will appear here as conversation grows." }}</p>
+        <h3>{{ structuredCv?.name || t("candidateNamePending") }}</h3>
+        <p>{{ structuredCv?.title || t("currentTitlePending") }}</p>
+        <p *ngIf="structuredCv?.total_it_experience">{{ t("totalItExperiencePrefix") }} {{ structuredCv?.total_it_experience }}</p>
+        <p>{{ structuredCv?.summary || t("summaryPending") }}</p>
       </article>
 
       <article class="preview-card">
-        <h3>Skills</h3>
+        <h3>{{ t("skills") }}</h3>
         <ul>
           <li *ngFor="let item of (structuredCv?.skills || [])">{{ item }}</li>
         </ul>
       </article>
 
       <article class="preview-card">
-        <h3>Achievements</h3>
+        <h3>{{ t("achievements") }}</h3>
         <ul>
           <li *ngFor="let item of (structuredCv?.achievements || [])">{{ item }}</li>
         </ul>
       </article>
 
       <article class="preview-card">
-        <h3>Education</h3>
+        <h3>{{ t("education") }}</h3>
         <ul>
           <li *ngFor="let item of asDisplayList(structuredCv?.education || [])">{{ item }}</li>
         </ul>
       </article>
 
       <article class="preview-card">
-        <h3>Certifications</h3>
+        <h3>{{ t("certifications") }}</h3>
         <ul>
           <li *ngFor="let item of (structuredCv?.certifications || [])">{{ item }}</li>
         </ul>
       </article>
 
       <article class="preview-card">
-        <h3>Experience</h3>
+        <h3>{{ t("experience") }}</h3>
         <div class="exp-item" *ngFor="let exp of (structuredCv?.experience || [])">
-          <p><strong>{{ exp.role || "Role pending" }}</strong> at <strong>{{ exp.company || "Company pending" }}</strong></p>
+          <p><strong>{{ exp.role || t("rolePending") }}</strong> {{ t("at") }} <strong>{{ exp.company || t("companyPending") }}</strong></p>
           <p>{{ exp.start_date || "" }} {{ exp.end_date ? " - " + exp.end_date : "" }}</p>
           <ul>
             <li *ngFor="let bullet of (exp.responsibilities || [])">{{ bullet }}</li>

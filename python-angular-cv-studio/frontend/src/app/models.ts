@@ -3,6 +3,7 @@ export interface ChatMessage {
   content: string;
 }
 
+export type SupportedLanguage = "en" | "de" | "es" | "hi";
 export type CvTemplateId = "custom" | "postcard" | "sample";
 export type ExportFormat = "pdf" | "docx";
 

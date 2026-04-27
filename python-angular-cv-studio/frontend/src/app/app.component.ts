@@ -2,7 +2,501 @@ import { CommonModule } from "@angular/common";
 import { Component, OnInit } from "@angular/core";
 import { FormsModule } from "@angular/forms";
 import { ApiService } from "./api.service";
-import { ChatMessage, CvTemplateId, ExportFormat, StructuredCv } from "./models";
+import { ChatMessage, CvTemplateId, ExportFormat, StructuredCv, SupportedLanguage } from "./models";
+
+type TranslationKey =
+  | "initialAssistantMessage"
+  | "loadingTitle"
+  | "loadingCopy"
+  | "reviewingResume"
+  | "reviewingResumeCopy"
+  | "editCvFields"
+  | "editCvCopy"
+  | "close"
+  | "careerObjective"
+  | "fullName"
+  | "title"
+  | "totalItExperience"
+  | "contact"
+  | "location"
+  | "summary"
+  | "skills"
+  | "certifications"
+  | "achievements"
+  | "education"
+  | "experience"
+  | "addExperience"
+  | "company"
+  | "role"
+  | "startDate"
+  | "endDate"
+  | "responsibilities"
+  | "remove"
+  | "at"
+  | "onePerLine"
+  | "commaOrNewLineSeparated"
+  | "cancel"
+  | "saveChanges"
+  | "saving"
+  | "siteTitle"
+  | "siteSubtitle"
+  | "tagVoice"
+  | "tagExport"
+  | "tagTemplate"
+  | "language"
+  | "profileCompletion"
+  | "userResponses"
+  | "skillsCaptured"
+  | "experienceItems"
+  | "conversationWorkspace"
+  | "uploadResume"
+  | "chooseResume"
+  | "resumeSupported"
+  | "assistantRole"
+  | "userRole"
+  | "typeYourAnswer"
+  | "recording"
+  | "microphone"
+  | "send"
+  | "failedToGetNextQuestion"
+  | "couldNotRefreshPreview"
+  | "resumeImportFailed"
+  | "resumeReviewedPrefix"
+  | "resumeReviewedSuffix"
+  | "cvSnapshot"
+  | "editCv"
+  | "template"
+  | "exportFormat"
+  | "docxNote"
+  | "refreshPreview"
+  | "generate"
+  | "generating"
+  | "uploadPhoto"
+  | "choosePhoto"
+  | "photoSupported"
+  | "removePhoto"
+  | "candidateNamePending"
+  | "currentTitlePending"
+  | "totalItExperiencePrefix"
+  | "summaryPending"
+  | "rolePending"
+  | "companyPending"
+  | "generatedFileEmpty"
+  | "cvGenerationFailed"
+  | "couldNotSaveCvChanges"
+  | "connectingMicrophone"
+  | "transcribingAnswer"
+  | "listeningAnswer"
+  | "recordingStarted"
+  | "microphoneCouldNotStart"
+  | "noSpeechCaptured"
+  | "transcriptAdded"
+  | "noClearSpeech"
+  | "audioTranscriptionFailed"
+  | "customTitle"
+  | "customDescription"
+  | "postcardTitle"
+  | "postcardDescription"
+  | "sampleTitle"
+  | "sampleDescription";
+
+const LANGUAGE_OPTIONS: Array<{ code: SupportedLanguage; label: string; apiLabel: string }> = [
+  { code: "en", label: "English", apiLabel: "English" },
+  { code: "de", label: "Deutsch", apiLabel: "German" },
+  { code: "es", label: "Espanol", apiLabel: "Spanish" },
+  { code: "hi", label: "Hindi", apiLabel: "Hindi" },
+];
+
+const UI_STRINGS: Record<SupportedLanguage, Record<TranslationKey, string>> = {
+  en: {
+    initialAssistantMessage: "Hi! I will help you create your CV in NTT Data format.\n\nWhat is your full name?",
+    loadingTitle: "Loading CV Studio",
+    loadingCopy: "Preparing the workspace and templates.",
+    reviewingResume: "Reviewing your resume",
+    reviewingResumeCopy: "Extracting content, structuring the CV, and preparing follow-up questions.",
+    editCvFields: "Edit CV fields",
+    editCvCopy: "Update the preview directly without typing a chat prompt.",
+    close: "Close",
+    careerObjective: "Career objective",
+    fullName: "Full name",
+    title: "Title",
+    totalItExperience: "Total IT experience",
+    contact: "Contact",
+    location: "Location",
+    summary: "Summary",
+    skills: "Skills",
+    certifications: "Certifications",
+    achievements: "Achievements",
+    education: "Education",
+    experience: "Experience",
+    addExperience: "Add Experience",
+    company: "Company",
+    role: "Role",
+    startDate: "Start date",
+    endDate: "End date",
+    responsibilities: "Responsibilities",
+    remove: "Remove",
+    at: "at",
+    onePerLine: "One per line",
+    commaOrNewLineSeparated: "Comma or new line separated",
+    cancel: "Cancel",
+    saveChanges: "Save Changes",
+    saving: "Saving...",
+    siteTitle: "NTT DATA Internal CV Studio",
+    siteSubtitle: "Build consultant profiles, capture structured details, and export polished resumes.",
+    tagVoice: "Voice-assisted",
+    tagExport: "DOCX + PDF",
+    tagTemplate: "Template-ready",
+    language: "Language",
+    profileCompletion: "Profile completion",
+    userResponses: "User responses",
+    skillsCaptured: "Skills captured",
+    experienceItems: "Experience items",
+    conversationWorkspace: "Conversation Workspace",
+    uploadResume: "Upload existing CV or resume",
+    chooseResume: "Choose Resume",
+    resumeSupported: "PDF or DOCX supported",
+    assistantRole: "assistant",
+    userRole: "user",
+    typeYourAnswer: "Type your answer",
+    recording: "Recording...",
+    microphone: "Microphone",
+    send: "Send",
+    failedToGetNextQuestion: "Failed to get next question.",
+    couldNotRefreshPreview: "Could not refresh CV preview.",
+    resumeImportFailed: "Resume import failed.",
+    resumeReviewedPrefix: "I reviewed your uploaded resume",
+    resumeReviewedSuffix: " and mapped the available details into the CV workspace.",
+    cvSnapshot: "CV Snapshot",
+    editCv: "Edit CV",
+    template: "Template",
+    exportFormat: "Export format",
+    docxNote: "DOCX currently uses the provided Word template. Postcard and Sample have distinct styled PDF layouts.",
+    refreshPreview: "Refresh Preview",
+    generate: "Generate",
+    generating: "Generating",
+    uploadPhoto: "Upload profile photo (optional)",
+    choosePhoto: "Choose Photo",
+    photoSupported: "PNG or JPG supported",
+    removePhoto: "Remove Photo",
+    candidateNamePending: "Candidate name pending",
+    currentTitlePending: "Current title pending",
+    totalItExperiencePrefix: "Total IT experience:",
+    summaryPending: "Summary will appear here as conversation grows.",
+    rolePending: "Role pending",
+    companyPending: "Company pending",
+    generatedFileEmpty: "Generated file was empty.",
+    cvGenerationFailed: "CV generation failed.",
+    couldNotSaveCvChanges: "Could not save CV changes.",
+    connectingMicrophone: "Connecting microphone...",
+    transcribingAnswer: "Transcribing your answer...",
+    listeningAnswer: "Listening for your answer...",
+    recordingStarted: "Recording...",
+    microphoneCouldNotStart: "Microphone could not start. Check browser permission and device.",
+    noSpeechCaptured: "No speech was captured. Please try again.",
+    transcriptAdded: "Transcript added to the message box.",
+    noClearSpeech: "No clear speech was detected. Please try again.",
+    audioTranscriptionFailed: "Audio transcription failed.",
+    customTitle: "Custom",
+    customDescription: "Uses the provided NTT DATA resume structure.",
+    postcardTitle: "Postcard",
+    postcardDescription: "More visual, compact, and card-led summary layout.",
+    sampleTitle: "Sample",
+    sampleDescription: "Balanced modern sample layout for general sharing.",
+  },
+  de: {
+    initialAssistantMessage: "Hallo! Ich helfe Ihnen dabei, Ihren Lebenslauf im NTT-DATA-Format zu erstellen.\n\nWie lautet Ihr vollstandiger Name?",
+    loadingTitle: "CV Studio wird geladen",
+    loadingCopy: "Arbeitsbereich und Vorlagen werden vorbereitet.",
+    reviewingResume: "Ihr Lebenslauf wird gepruft",
+    reviewingResumeCopy: "Inhalte werden extrahiert, der CV strukturiert und Folgefragen vorbereitet.",
+    editCvFields: "CV-Felder bearbeiten",
+    editCvCopy: "Aktualisieren Sie die Vorschau direkt, ohne einen Chat-Prompt zu schreiben.",
+    close: "Schliessen",
+    careerObjective: "Karriereziel",
+    fullName: "Vollstandiger Name",
+    title: "Titel",
+    totalItExperience: "Gesamte IT-Erfahrung",
+    contact: "Kontakt",
+    location: "Standort",
+    summary: "Zusammenfassung",
+    skills: "Kenntnisse",
+    certifications: "Zertifizierungen",
+    achievements: "Erfolge",
+    education: "Ausbildung",
+    experience: "Berufserfahrung",
+    addExperience: "Erfahrung hinzufugen",
+    company: "Unternehmen",
+    role: "Rolle",
+    startDate: "Startdatum",
+    endDate: "Enddatum",
+    responsibilities: "Aufgaben",
+    remove: "Entfernen",
+    at: "bei",
+    onePerLine: "Eine pro Zeile",
+    commaOrNewLineSeparated: "Durch Komma oder Zeilenumbruch getrennt",
+    cancel: "Abbrechen",
+    saveChanges: "Anderungen speichern",
+    saving: "Wird gespeichert...",
+    siteTitle: "NTT DATA Interne CV Studio",
+    siteSubtitle: "Erstellen Sie Beraterprofile, erfassen Sie strukturierte Details und exportieren Sie professionelle Lebenslaufe.",
+    tagVoice: "Sprachgestutzt",
+    tagExport: "DOCX + PDF",
+    tagTemplate: "Vorlagenbereit",
+    language: "Sprache",
+    profileCompletion: "Profilfortschritt",
+    userResponses: "Benutzerantworten",
+    skillsCaptured: "Erfasste Kenntnisse",
+    experienceItems: "Erfahrungseintrage",
+    conversationWorkspace: "Gesprachebereich",
+    uploadResume: "Vorhandenen CV oder Lebenslauf hochladen",
+    chooseResume: "Lebenslauf auswahlen",
+    resumeSupported: "PDF oder DOCX unterstutzt",
+    assistantRole: "assistent",
+    userRole: "benutzer",
+    typeYourAnswer: "Antwort eingeben",
+    recording: "Aufnahme...",
+    microphone: "Mikrofon",
+    send: "Senden",
+    failedToGetNextQuestion: "Die nachste Frage konnte nicht geladen werden.",
+    couldNotRefreshPreview: "Die CV-Vorschau konnte nicht aktualisiert werden.",
+    resumeImportFailed: "Der Lebenslaufimport ist fehlgeschlagen.",
+    resumeReviewedPrefix: "Ich habe Ihren hochgeladenen Lebenslauf",
+    resumeReviewedSuffix: " gepruft und die verfugbaren Details in den CV-Arbeitsbereich ubernommen.",
+    cvSnapshot: "CV-Vorschau",
+    editCv: "CV bearbeiten",
+    template: "Vorlage",
+    exportFormat: "Exportformat",
+    docxNote: "DOCX verwendet derzeit die bereitgestellte Word-Vorlage. Postcard und Sample haben unterschiedliche PDF-Layouts.",
+    refreshPreview: "Vorschau aktualisieren",
+    generate: "Erstellen",
+    generating: "Wird erstellt",
+    uploadPhoto: "Profilfoto hochladen (optional)",
+    choosePhoto: "Foto auswahlen",
+    photoSupported: "PNG oder JPG unterstutzt",
+    removePhoto: "Foto entfernen",
+    candidateNamePending: "Name des Kandidaten steht aus",
+    currentTitlePending: "Aktueller Titel steht aus",
+    totalItExperiencePrefix: "Gesamte IT-Erfahrung:",
+    summaryPending: "Die Zusammenfassung wird angezeigt, sobald das Gesprach fortschreitet.",
+    rolePending: "Rolle ausstehend",
+    companyPending: "Unternehmen ausstehend",
+    generatedFileEmpty: "Die erzeugte Datei war leer.",
+    cvGenerationFailed: "Die CV-Erstellung ist fehlgeschlagen.",
+    couldNotSaveCvChanges: "CV-Anderungen konnten nicht gespeichert werden.",
+    connectingMicrophone: "Mikrofon wird verbunden...",
+    transcribingAnswer: "Ihre Antwort wird transkribiert...",
+    listeningAnswer: "Ihre Antwort wird aufgenommen...",
+    recordingStarted: "Aufnahme...",
+    microphoneCouldNotStart: "Das Mikrofon konnte nicht gestartet werden. Uberprufen Sie Browserberechtigung und Gerat.",
+    noSpeechCaptured: "Es wurde keine Sprache aufgenommen. Bitte versuchen Sie es erneut.",
+    transcriptAdded: "Das Transkript wurde in das Nachrichtenfeld eingefugt.",
+    noClearSpeech: "Keine deutliche Sprache erkannt. Bitte versuchen Sie es erneut.",
+    audioTranscriptionFailed: "Die Audiotranskription ist fehlgeschlagen.",
+    customTitle: "Benutzerdefiniert",
+    customDescription: "Verwendet die bereitgestellte NTT-DATA-Lebenslaufstruktur.",
+    postcardTitle: "Postkarte",
+    postcardDescription: "Visueller, kompakter und kartenbasierter Aufbau.",
+    sampleTitle: "Beispiel",
+    sampleDescription: "Ausgewogenes modernes Beispiel-Layout fur allgemeine Weitergabe.",
+  },
+  es: {
+    initialAssistantMessage: "Hola. Le ayudare a crear su CV en el formato de NTT Data.\n\nCual es su nombre completo?",
+    loadingTitle: "Cargando CV Studio",
+    loadingCopy: "Preparando el espacio de trabajo y las plantillas.",
+    reviewingResume: "Revisando su curriculo",
+    reviewingResumeCopy: "Extrayendo contenido, estructurando el CV y preparando preguntas de seguimiento.",
+    editCvFields: "Editar campos del CV",
+    editCvCopy: "Actualice la vista previa directamente sin escribir un mensaje en el chat.",
+    close: "Cerrar",
+    careerObjective: "Objetivo profesional",
+    fullName: "Nombre completo",
+    title: "Titulo",
+    totalItExperience: "Experiencia total en TI",
+    contact: "Contacto",
+    location: "Ubicacion",
+    summary: "Resumen",
+    skills: "Habilidades",
+    certifications: "Certificaciones",
+    achievements: "Logros",
+    education: "Educacion",
+    experience: "Experiencia",
+    addExperience: "Agregar experiencia",
+    company: "Empresa",
+    role: "Rol",
+    startDate: "Fecha de inicio",
+    endDate: "Fecha de fin",
+    responsibilities: "Responsabilidades",
+    remove: "Eliminar",
+    at: "en",
+    onePerLine: "Una por linea",
+    commaOrNewLineSeparated: "Separado por coma o salto de linea",
+    cancel: "Cancelar",
+    saveChanges: "Guardar cambios",
+    saving: "Guardando...",
+    siteTitle: "NTT DATA CV Studio Interno",
+    siteSubtitle: "Cree perfiles de consultores, capture detalles estructurados y exporte curriculos pulidos.",
+    tagVoice: "Asistido por voz",
+    tagExport: "DOCX + PDF",
+    tagTemplate: "Listo para plantillas",
+    language: "Idioma",
+    profileCompletion: "Completitud del perfil",
+    userResponses: "Respuestas del usuario",
+    skillsCaptured: "Habilidades capturadas",
+    experienceItems: "Elementos de experiencia",
+    conversationWorkspace: "Espacio de conversacion",
+    uploadResume: "Cargar CV o curriculo existente",
+    chooseResume: "Elegir curriculo",
+    resumeSupported: "Compatible con PDF o DOCX",
+    assistantRole: "asistente",
+    userRole: "usuario",
+    typeYourAnswer: "Escriba su respuesta",
+    recording: "Grabando...",
+    microphone: "Microfono",
+    send: "Enviar",
+    failedToGetNextQuestion: "No se pudo obtener la siguiente pregunta.",
+    couldNotRefreshPreview: "No se pudo actualizar la vista previa del CV.",
+    resumeImportFailed: "La importacion del curriculo fallo.",
+    resumeReviewedPrefix: "Revise su curriculo cargado",
+    resumeReviewedSuffix: " y asigne los detalles disponibles al espacio de trabajo del CV.",
+    cvSnapshot: "Vista previa del CV",
+    editCv: "Editar CV",
+    template: "Plantilla",
+    exportFormat: "Formato de exportacion",
+    docxNote: "DOCX usa actualmente la plantilla de Word proporcionada. Postcard y Sample tienen disenos PDF distintos.",
+    refreshPreview: "Actualizar vista previa",
+    generate: "Generar",
+    generating: "Generando",
+    uploadPhoto: "Cargar foto de perfil (opcional)",
+    choosePhoto: "Elegir foto",
+    photoSupported: "Compatible con PNG o JPG",
+    removePhoto: "Eliminar foto",
+    candidateNamePending: "Nombre del candidato pendiente",
+    currentTitlePending: "Titulo actual pendiente",
+    totalItExperiencePrefix: "Experiencia total en TI:",
+    summaryPending: "El resumen aparecera aqui a medida que avance la conversacion.",
+    rolePending: "Rol pendiente",
+    companyPending: "Empresa pendiente",
+    generatedFileEmpty: "El archivo generado estaba vacio.",
+    cvGenerationFailed: "La generacion del CV fallo.",
+    couldNotSaveCvChanges: "No se pudieron guardar los cambios del CV.",
+    connectingMicrophone: "Conectando microfono...",
+    transcribingAnswer: "Transcribiendo su respuesta...",
+    listeningAnswer: "Escuchando su respuesta...",
+    recordingStarted: "Grabando...",
+    microphoneCouldNotStart: "No se pudo iniciar el microfono. Revise el permiso del navegador y el dispositivo.",
+    noSpeechCaptured: "No se capturo voz. Intente nuevamente.",
+    transcriptAdded: "La transcripcion se agrego al cuadro de mensaje.",
+    noClearSpeech: "No se detecto voz clara. Intente nuevamente.",
+    audioTranscriptionFailed: "La transcripcion de audio fallo.",
+    customTitle: "Personalizado",
+    customDescription: "Usa la estructura de curriculo de NTT DATA proporcionada.",
+    postcardTitle: "Postal",
+    postcardDescription: "Diseno mas visual, compacto y basado en tarjetas.",
+    sampleTitle: "Ejemplo",
+    sampleDescription: "Diseno moderno equilibrado para uso general.",
+  },
+  hi: {
+    initialAssistantMessage: "Namaste. Main NTT Data format mein aapka CV banane mein madad karunga.\n\nAapka poora naam kya hai?",
+    loadingTitle: "CV Studio load ho raha hai",
+    loadingCopy: "Workspace aur templates taiyar kiye ja rahe hain.",
+    reviewingResume: "Aapka resume review ho raha hai",
+    reviewingResumeCopy: "Content extract ho raha hai, CV structure ban raha hai, aur follow-up questions taiyar ho rahe hain.",
+    editCvFields: "CV fields edit karein",
+    editCvCopy: "Chat prompt likhe bina preview ko seedha update karein.",
+    close: "Band karein",
+    careerObjective: "Career objective",
+    fullName: "Poora naam",
+    title: "Title",
+    totalItExperience: "Kul IT experience",
+    contact: "Contact",
+    location: "Location",
+    summary: "Summary",
+    skills: "Skills",
+    certifications: "Certifications",
+    achievements: "Achievements",
+    education: "Education",
+    experience: "Experience",
+    addExperience: "Experience jodein",
+    company: "Company",
+    role: "Role",
+    startDate: "Start date",
+    endDate: "End date",
+    responsibilities: "Responsibilities",
+    remove: "Remove",
+    at: "at",
+    onePerLine: "Har line mein ek",
+    commaOrNewLineSeparated: "Comma ya new line se alag karein",
+    cancel: "Cancel",
+    saveChanges: "Changes save karein",
+    saving: "Save ho raha hai...",
+    siteTitle: "NTT DATA Internal CV Studio",
+    siteSubtitle: "Consultant profiles banayein, structured details capture karein, aur polished resumes export karein.",
+    tagVoice: "Voice-assisted",
+    tagExport: "DOCX + PDF",
+    tagTemplate: "Template-ready",
+    language: "Bhasha",
+    profileCompletion: "Profile completion",
+    userResponses: "User responses",
+    skillsCaptured: "Skills captured",
+    experienceItems: "Experience items",
+    conversationWorkspace: "Conversation Workspace",
+    uploadResume: "Existing CV ya resume upload karein",
+    chooseResume: "Resume chunein",
+    resumeSupported: "PDF ya DOCX supported",
+    assistantRole: "assistant",
+    userRole: "user",
+    typeYourAnswer: "Apna jawab type karein",
+    recording: "Recording...",
+    microphone: "Microphone",
+    send: "Send",
+    failedToGetNextQuestion: "Agla question nahin mil saka.",
+    couldNotRefreshPreview: "CV preview refresh nahin ho saka.",
+    resumeImportFailed: "Resume import fail ho gaya.",
+    resumeReviewedPrefix: "Maine aapka uploaded resume",
+    resumeReviewedSuffix: " review karke available details ko CV workspace mein map kar diya hai.",
+    cvSnapshot: "CV Snapshot",
+    editCv: "CV edit karein",
+    template: "Template",
+    exportFormat: "Export format",
+    docxNote: "DOCX abhi provided Word template ka use karta hai. Postcard aur Sample ke alag PDF layouts hain.",
+    refreshPreview: "Preview refresh karein",
+    generate: "Generate",
+    generating: "Generate ho raha hai",
+    uploadPhoto: "Profile photo upload karein (optional)",
+    choosePhoto: "Photo chunein",
+    photoSupported: "PNG ya JPG supported",
+    removePhoto: "Photo hataein",
+    candidateNamePending: "Candidate name pending",
+    currentTitlePending: "Current title pending",
+    totalItExperiencePrefix: "Kul IT experience:",
+    summaryPending: "Conversation badhne par summary yahan dikhegi.",
+    rolePending: "Role pending",
+    companyPending: "Company pending",
+    generatedFileEmpty: "Generated file empty thi.",
+    cvGenerationFailed: "CV generation fail ho gaya.",
+    couldNotSaveCvChanges: "CV changes save nahin ho sake.",
+    connectingMicrophone: "Microphone connect ho raha hai...",
+    transcribingAnswer: "Aapka jawab transcribe ho raha hai...",
+    listeningAnswer: "Aapka jawab suna ja raha hai...",
+    recordingStarted: "Recording...",
+    microphoneCouldNotStart: "Microphone start nahin ho saka. Browser permission aur device check karein.",
+    noSpeechCaptured: "Speech capture nahin hui. Dobara try karein.",
+    transcriptAdded: "Transcript message box mein add kar diya gaya hai.",
+    noClearSpeech: "Clear speech detect nahin hui. Dobara try karein.",
+    audioTranscriptionFailed: "Audio transcription fail ho gaya.",
+    customTitle: "Custom",
+    customDescription: "Provided NTT DATA resume structure ka use karta hai.",
+    postcardTitle: "Postcard",
+    postcardDescription: "Zyada visual, compact, aur card-based summary layout.",
+    sampleTitle: "Sample",
+    sampleDescription: "General sharing ke liye balanced modern sample layout.",
+  },
+};
+
+function getInitialAssistantMessage(language: SupportedLanguage): string {
+  return UI_STRINGS[language].initialAssistantMessage;
+}
 
 @Component({
   selector: "app-root",
@@ -19,10 +513,12 @@ export class AppComponent implements OnInit {
     responsibilitiesText: "",
   };
 
+  selectedLanguage: SupportedLanguage = "en";
+  readonly languageOptions = LANGUAGE_OPTIONS;
   messages: ChatMessage[] = [
     {
       role: "assistant",
-      content: "Hi! I will help you create your CV in NTT Data format.\n\nWhat is your full name?",
+      content: getInitialAssistantMessage("en"),
     },
   ];
 
@@ -51,11 +547,7 @@ export class AppComponent implements OnInit {
   profilePhotoName = "";
   importedResumeName = "";
   photoOfferMade = false;
-  readonly templateOptions: Array<{ id: CvTemplateId; title: string; description: string }> = [
-    { id: "custom", title: "Custom", description: "Uses the provided NTT DATA resume structure." },
-    { id: "postcard", title: "Postcard", description: "More visual, compact, and card-led summary layout." },
-    { id: "sample", title: "Sample", description: "Balanced modern sample layout for general sharing." },
-  ];
+  readonly templateOptions: CvTemplateId[] = ["custom", "postcard", "sample"];
 
   private micStream: MediaStream | null = null;
   private mediaRecorder: MediaRecorder | null = null;
@@ -102,6 +594,10 @@ export class AppComponent implements OnInit {
     return this.structuredCv?.experience?.length ?? 0;
   }
 
+  get selectedLanguageLabel(): string {
+    return this.languageOptions.find((option) => option.code === this.selectedLanguage)?.apiLabel || "English";
+  }
+
   get hasPreviewContent(): boolean {
     const structured = this.structuredCv;
     if (!structured) {
@@ -132,15 +628,53 @@ export class AppComponent implements OnInit {
 
   get micStatusText(): string {
     if (this.isConnectingMic) {
-      return "Connecting microphone...";
+      return this.t("connectingMicrophone");
     }
     if (this.isTranscribingAudio) {
-      return "Transcribing your answer...";
+      return this.t("transcribingAnswer");
     }
     if (this.isRecording) {
-      return "Listening for your answer...";
+      return this.t("listeningAnswer");
     }
     return "";
+  }
+
+  t(key: TranslationKey): string {
+    return UI_STRINGS[this.selectedLanguage][key] || UI_STRINGS.en[key] || key;
+  }
+
+  getTemplateTitle(templateId: CvTemplateId): string {
+    if (templateId === "custom") {
+      return this.t("customTitle");
+    }
+    if (templateId === "postcard") {
+      return this.t("postcardTitle");
+    }
+    return this.t("sampleTitle");
+  }
+
+  getTemplateDescription(templateId: CvTemplateId): string {
+    if (templateId === "custom") {
+      return this.t("customDescription");
+    }
+    if (templateId === "postcard") {
+      return this.t("postcardDescription");
+    }
+    return this.t("sampleDescription");
+  }
+
+  getRoleLabel(role: ChatMessage["role"]): string {
+    return role === "assistant" ? this.t("assistantRole") : this.t("userRole");
+  }
+
+  onLanguageChange(): void {
+    if (
+      !this.userResponses &&
+      this.messages.length === 1 &&
+      this.messages[0].role === "assistant"
+    ) {
+      this.messages = [{ role: "assistant", content: getInitialAssistantMessage(this.selectedLanguage) }];
+    }
   }
 
   sendMessage(): void {
@@ -157,7 +691,7 @@ export class AppComponent implements OnInit {
     this.isBusy = true;
 
     this.api
-      .getNextQuestion(this.messages, this.structuredCv, !!this.profilePhotoBase64, this.photoOfferMade)
+      .getNextQuestion(this.messages, this.structuredCv, !!this.profilePhotoBase64, this.photoOfferMade, this.selectedLanguageLabel)
       .subscribe({
         next: (res) => {
           const question = (res.question || "").trim();
@@ -170,7 +704,7 @@ export class AppComponent implements OnInit {
           this.refreshPreview();
         },
         error: (err) => {
-          this.chatError = err?.error?.detail || "Failed to get next question.";
+          this.chatError = err?.error?.detail || this.t("failedToGetNextQuestion");
           this.isBusy = false;
         },
       });
@@ -191,7 +725,7 @@ export class AppComponent implements OnInit {
         this.isBusy = false;
       },
       error: (err) => {
-        this.previewError = err?.error?.detail || "Could not refresh CV preview.";
+        this.previewError = err?.error?.detail || this.t("couldNotRefreshPreview");
         this.isBusy = false;
       },
     });
@@ -230,7 +764,7 @@ export class AppComponent implements OnInit {
     this.previewError = "";
     this.audioNotice = "";
 
-    this.api.importResume(file).subscribe({
+    this.api.importResume(file, this.selectedLanguageLabel).subscribe({
       next: (res) => {
         this.structuredCv = res.structured_cv;
         this.importedResumeName = res.file_name || file.name;
@@ -238,7 +772,7 @@ export class AppComponent implements OnInit {
         this.messages = [
           {
             role: "assistant",
-            content: `I reviewed your uploaded resume${this.importedResumeName ? ` (${this.importedResumeName})` : ""} and mapped the available details into the CV workspace.`,
+            content: `${this.t("resumeReviewedPrefix")}${this.importedResumeName ? ` (${this.importedResumeName})` : ""}${this.t("resumeReviewedSuffix")}`,
           },
         ];
 
@@ -256,7 +790,7 @@ export class AppComponent implements OnInit {
         this.isImportingResume = false;
       },
       error: (err) => {
-        this.chatError = err?.error?.detail || "Resume import failed.";
+        this.chatError = err?.error?.detail || this.t("resumeImportFailed");
         this.isBusy = false;
         this.isImportingResume = false;
       },
@@ -335,7 +869,7 @@ export class AppComponent implements OnInit {
         this.isEditingCv = false;
       },
       error: (err) => {
-        this.previewError = err?.error?.detail || "Could not save CV changes.";
+        this.previewError = err?.error?.detail || this.t("couldNotSaveCvChanges");
         this.isSavingCv = false;
       },
     });
@@ -397,7 +931,7 @@ export class AppComponent implements OnInit {
           const name = headerName || fallbackName;
           const blob = response.body;
           if (!blob) {
-            this.chatError = "Generated file was empty.";
+            this.chatError = this.t("generatedFileEmpty");
             this.isBusy = false;
             this.isGeneratingCv = false;
             return;
@@ -412,7 +946,7 @@ export class AppComponent implements OnInit {
           this.isGeneratingCv = false;
         },
         error: (err) => {
-          this.chatError = err?.error?.detail || "CV generation failed.";
+          this.chatError = err?.error?.detail || this.t("cvGenerationFailed");
           this.isBusy = false;
           this.isGeneratingCv = false;
         },
@@ -488,10 +1022,10 @@ export class AppComponent implements OnInit {
       this.mediaRecorder.start(250);
       this.isConnectingMic = false;
       this.isRecording = true;
-      this.audioNotice = "Recording...";
+      this.audioNotice = this.t("recordingStarted");
     } catch {
       this.cleanupMicRecording();
-      this.audioNotice = "Microphone could not start. Check browser permission and device.";
+      this.audioNotice = this.t("microphoneCouldNotStart");
     }
   }
 
@@ -503,7 +1037,7 @@ export class AppComponent implements OnInit {
     this.isRecording = false;
     this.isBusy = true;
     this.isTranscribingAudio = true;
-    this.audioNotice = "Transcribing your answer...";
+    this.audioNotice = this.t("transcribingAnswer");
 
     if (this.mediaRecorder.state !== "inactive") {
       this.mediaRecorder.stop();
@@ -520,7 +1054,7 @@ export class AppComponent implements OnInit {
     this.cleanupMicRecording();
 
     if (!audioBlob.size) {
-      this.audioNotice = "No speech was captured. Please try again.";
+      this.audioNotice = this.t("noSpeechCaptured");
       this.isBusy = false;
       this.isTranscribingAudio = false;
       return;
@@ -528,7 +1062,7 @@ export class AppComponent implements OnInit {
 
     const audioFile = new File([audioBlob], `speech.${extension}`, { type: mimeType });
 
-    this.api.transcribeAudio(audioFile).subscribe({
+    this.api.transcribeAudio(audioFile, this.selectedLanguage).subscribe({
       next: (res) => {
         this.latestTranscript = (res.transcript || "").trim();
         if (this.latestTranscript) {
@@ -536,15 +1070,15 @@ export class AppComponent implements OnInit {
             .filter((part) => !!part)
             .join(" ")
             .trim();
-          this.audioNotice = "Transcript added to the message box.";
+          this.audioNotice = this.t("transcriptAdded");
         } else {
-          this.audioNotice = "No clear speech was detected. Please try again.";
+          this.audioNotice = this.t("noClearSpeech");
         }
         this.isBusy = false;
         this.isTranscribingAudio = false;
       },
       error: (err) => {
-        this.audioNotice = err?.error?.detail || "Audio transcription failed.";
+        this.audioNotice = err?.error?.detail || this.t("audioTranscriptionFailed");
         this.isBusy = false;
         this.isTranscribingAudio = false;
       },

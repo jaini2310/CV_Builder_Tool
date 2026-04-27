@@ -167,6 +167,36 @@ body {
   justify-content: flex-end;
 }
 
+.masthead-tools {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+.language-picker {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.45rem 0.7rem;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.72);
+  border: 1px solid rgba(133, 171, 207, 0.7);
+  color: #184f7c;
+  font-size: 0.82rem;
+  font-weight: 700;
+}
+
+.language-picker select {
+  border: 0;
+  background: transparent;
+  color: #123e62;
+  font: inherit;
+  outline: none;
+  cursor: pointer;
+}
+
 .masthead-tag {
   display: inline-flex;
   align-items: center;
@@ -808,6 +838,11 @@ button:disabled {
   .masthead {
     flex-direction: column;
     align-items: flex-start;
+  }
+
+  .masthead-tools,
+  .masthead-tags {
+    justify-content: flex-start;
   }
 
   .template-grid {

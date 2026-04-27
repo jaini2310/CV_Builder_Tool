@@ -6,7 +6,7 @@ import zipfile
 from io import BytesIO
 from pathlib import Path
 
-from fastapi import FastAPI, File, HTTPException, UploadFile
+from fastapi import FastAPI, File, Form, HTTPException, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse
 
@@ -224,6 +224,7 @@ def api_next_question(payload: NextQuestionRequest):
             structured_cv=payload.structured_cv,
             has_profile_photo=payload.has_profile_photo,
             photo_offer_made=payload.photo_offer_made,
+            preferred_language=payload.preferred_language,
         )
         return {"question": question}
     except Exception as exc:
@@ -252,7 +253,7 @@ def api_save_cv(payload: SaveCvRequest):
 
 
 @app.post("/api/import-resume")
-async def api_import_resume(resume_file: UploadFile = File(...)):
+async def api_import_resume(resume_file: UploadFile = File(...), preferred_language: str = Form("English")):
     try:
         data = await resume_file.read()
         if not data:
@@ -269,6 +270,7 @@ async def api_import_resume(resume_file: UploadFile = File(...)):
             structured_cv=structured,
             has_profile_photo=False,
             photo_offer_made=False,
+            preferred_language=preferred_language,
         )
         return {
             "structured_cv": structured,
@@ -282,10 +284,10 @@ async def api_import_resume(resume_file: UploadFile = File(...)):
 
 
 @app.post("/api/transcribe-audio")
-async def api_transcribe_audio(audio_file: UploadFile = File(...)):
+async def api_transcribe_audio(audio_file: UploadFile = File(...), transcription_language: str = Form("")):
     try:
         data = await audio_file.read()
-        transcript = transcribe_audio(data, audio_file.filename or "speech.wav")
+        transcript = transcribe_audio(data, audio_file.filename or "speech.wav", transcription_language or None)
         return {"transcript": transcript}
     except Exception as exc:
         raise HTTPException(status_code=500, detail=str(exc)) from exc

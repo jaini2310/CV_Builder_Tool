@@ -1,7 +1,7 @@
 import { Injectable } from "@angular/core";
 import { HttpClient, HttpResponse } from "@angular/common/http";
 import { Observable } from "rxjs";
-import { ChatMessage, CvTemplateId, ExportFormat, StructuredCv } from "./models";
+import { ChatMessage, CvTemplateId, ExportFormat, StructuredCv, SupportedLanguage } from "./models";
 
 @Injectable({ providedIn: "root" })
 export class ApiService {
@@ -12,12 +12,14 @@ export class ApiService {
     structuredCv: StructuredCv | null,
     hasProfilePhoto: boolean,
     photoOfferMade: boolean,
+    preferredLanguage: string,
   ): Observable<{ question: string }> {
     return this.http.post<{ question: string }>("/api/next-question", {
       messages,
       structured_cv: structuredCv || {},
       has_profile_photo: hasProfilePhoto,
       photo_offer_made: photoOfferMade,
+      preferred_language: preferredLanguage,
     });
   }
 
@@ -34,15 +36,17 @@ export class ApiService {
     });
   }
 
-  importResume(file: File): Observable<{ structured_cv: StructuredCv; next_question: string; file_name: string }> {
+  importResume(file: File, preferredLanguage: string): Observable<{ structured_cv: StructuredCv; next_question: string; file_name: string }> {
     const formData = new FormData();
     formData.append("resume_file", file);
+    formData.append("preferred_language", preferredLanguage);
     return this.http.post<{ structured_cv: StructuredCv; next_question: string; file_name: string }>("/api/import-resume", formData);
   }
 
-  transcribeAudio(file: File): Observable<{ transcript: string }> {
+  transcribeAudio(file: File, transcriptionLanguage: SupportedLanguage): Observable<{ transcript: string }> {
     const formData = new FormData();
     formData.append("audio_file", file);
+    formData.append("transcription_language", transcriptionLanguage);
     return this.http.post<{ transcript: string }>("/api/transcribe-audio", formData);
   }
 

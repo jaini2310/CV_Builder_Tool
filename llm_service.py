@@ -20,19 +20,21 @@ MODEL = "gpt-4o-mini"   # replace if your enterprise model name is different
 TRANSCRIBE_MODEL = os.getenv("OPENAI_TRANSCRIBE_MODEL", "gpt-4o-mini-transcribe")
 
 
-def get_next_question(messages, has_profile_photo=False, photo_offer_made=False, structured_cv=None):
+def get_next_question(messages, has_profile_photo=False, photo_offer_made=False, structured_cv=None, preferred_language="English"):
     photo_status = "A profile photo has already been uploaded." if has_profile_photo else "No profile photo has been uploaded yet."
     photo_prompt_status = "The profile photo option has already been offered once." if photo_offer_made else "The profile photo option has not been offered yet."
     structured_cv = structured_cv or {}
     populated_snapshot = {key: value for key, value in structured_cv.items() if value not in ("", [], {}, None)}
     structured_cv_snapshot = json.dumps(populated_snapshot, ensure_ascii=False, indent=2) if populated_snapshot else "No structured CV snapshot is available yet."
 
-    system_prompt = """
+    system_prompt = f"""
     You are a professional CV assistant.
 
     Ask the user one question at a time to collect CV details.
     Review the existing conversation before asking the next question.
     Do not skip any required field.
+    Ask and reply in {preferred_language}.
+    Keep the wording natural for {preferred_language}, including the final completion message.
 
     Collect:
     - Career objective
@@ -60,7 +62,7 @@ def get_next_question(messages, has_profile_photo=False, photo_offer_made=False,
     If you ask about the profile photo, tell the user they can upload it using the profile photo uploader in the dashboard.
     Only say the final completion message after all required items have been collected.
 
-    If enough information is collected, reply exactly:
+    If enough information is collected, reply with the {preferred_language} equivalent of:
     Thank you. Click on 'Generate' to create your resume.
     """
 
@@ -91,6 +93,7 @@ def extract_structured_cv(conversation_text):
 
     Rules:
     - Return JSON only
+    - The conversation may be in any language
     - objectives should capture the user's career objective statement when they mention phrases like "career objective", "objective", "my goal", or "my aim"
     - total_it_experience should capture the candidate's complete IT experience till date
     - summary should be a concise professional summary of the candidate's complete IT experience
@@ -136,6 +139,7 @@ def apply_structured_cv_update(current_structured_cv, user_update_text):
 
     Rules:
     - Treat the user's latest message as an explicit correction or update
+    - The user update may be in any language
     - Update only the fields the user is changing
     - Preserve all other existing values exactly as they are
     - If the user says to edit skills, certifications, achievements, education, or experience, return the corrected field value in full
@@ -170,18 +174,21 @@ def apply_structured_cv_update(current_structured_cv, user_update_text):
         raise ValueError(f"Could not parse JSON from model response:\n{text}")
 
 
-def transcribe_audio(audio_bytes, filename="speech.wav"):
+def transcribe_audio(audio_bytes, filename="speech.wav", language_hint=None):
     if not audio_bytes or len(audio_bytes) < 1024:
         return ""
 
     audio_stream = BytesIO(audio_bytes)
     audio_stream.name = filename
 
-    response = client.audio.transcriptions.create(
-        model=TRANSCRIBE_MODEL,
-        file=audio_stream,
-        language="en",
-    )
+    request_payload = {
+        "model": TRANSCRIBE_MODEL,
+        "file": audio_stream,
+    }
+    if language_hint:
+        request_payload["language"] = language_hint
+
+    response = client.audio.transcriptions.create(**request_payload)
 
     transcript = getattr(response, "text", "").strip()
     return transcript
