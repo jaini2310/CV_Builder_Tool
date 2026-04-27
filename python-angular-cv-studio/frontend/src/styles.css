@@ -237,6 +237,31 @@ body {
   margin: 0;
 }
 
+.preview-edit-button {
+  width: 2.5rem;
+  height: 2.5rem;
+  min-height: 2.5rem;
+  padding: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  border: 1px solid rgba(33, 111, 184, 0.22);
+  background: linear-gradient(180deg, #f7fbff 0%, #eaf4ff 100%);
+  box-shadow: 0 8px 18px rgba(29, 107, 179, 0.12);
+}
+
+.preview-edit-button svg {
+  width: 1.15rem;
+  height: 1.15rem;
+  fill: #1d5f98;
+}
+
+.preview-edit-button:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 12px 22px rgba(29, 107, 179, 0.18);
+}
+
 .edit-overlay-card {
   width: min(980px, 94vw);
   max-height: 88vh;

@@ -236,7 +236,19 @@
     <section class="panel">
       <div class="panel-header">
         <h2>CV Snapshot</h2>
-        <button type="button" [disabled]="isBusy" (click)="openEditCv()">Edit CV</button>
+        <button
+          *ngIf="hasPreviewContent"
+          type="button"
+          class="preview-edit-button"
+          [disabled]="isBusy"
+          (click)="openEditCv()"
+          aria-label="Edit CV"
+          title="Edit CV"
+        >
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M15.86 3.39a2.1 2.1 0 0 1 2.97 0l1.78 1.78a2.1 2.1 0 0 1 0 2.97l-9.6 9.6a1 1 0 0 1-.46.27l-4.4 1.1a1 1 0 0 1-1.22-1.22l1.1-4.4a1 1 0 0 1 .27-.46Zm1.56 1.41-9.1 9.1-.62 2.49 2.49-.62 9.1-9.1a.1.1 0 0 0 0-.14L17.5 4.8a.1.1 0 0 0-.14 0ZM4 20a1 1 0 0 1 1-1h14a1 1 0 1 1 0 2H5a1 1 0 0 1-1-1Z"/>
+          </svg>
+        </button>
       </div>
 
       <div class="selection-block">

@@ -102,6 +102,34 @@ export class AppComponent implements OnInit {
     return this.structuredCv?.experience?.length ?? 0;
   }
 
+  get hasPreviewContent(): boolean {
+    const structured = this.structuredCv;
+    if (!structured) {
+      return false;
+    }
+
+    return [
+      structured.objectives,
+      structured.name,
+      structured.title,
+      structured.total_it_experience,
+      structured.contact,
+      structured.location,
+      structured.summary,
+      ...(structured.skills || []),
+      ...(structured.certifications || []),
+      ...(structured.achievements || []),
+      ...this.asDisplayList(structured.education || []),
+      ...((structured.experience || []).flatMap((item) => [
+        item.company || "",
+        item.role || "",
+        item.start_date || "",
+        item.end_date || "",
+        ...((item.responsibilities || []) as string[]),
+      ])),
+    ].some((value) => !!String(value || "").trim());
+  }
+
   get micStatusText(): string {
     if (this.isConnectingMic) {
       return "Connecting microphone...";
