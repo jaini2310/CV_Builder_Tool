@@ -225,106 +225,6 @@ body {
   margin-top: 0;
 }
 
-.panel-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 0.75rem;
-  margin-bottom: 0.75rem;
-}
-
-.panel-header h2 {
-  margin: 0;
-}
-
-.edit-overlay-card {
-  width: min(980px, 94vw);
-  max-height: 88vh;
-  overflow-y: auto;
-  text-align: left;
-}
-
-.edit-header {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 1rem;
-  margin-bottom: 1rem;
-}
-
-.edit-close-button {
-  white-space: nowrap;
-}
-
-.edit-grid,
-.experience-edit-grid {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 0.8rem;
-}
-
-.edit-field {
-  display: flex;
-  flex-direction: column;
-  gap: 0.35rem;
-}
-
-.edit-field span {
-  font-size: 0.86rem;
-  font-weight: 700;
-  color: #35506b;
-}
-
-.edit-field input,
-.edit-field textarea {
-  width: 100%;
-  border: 1px solid var(--line);
-  border-radius: 10px;
-  padding: 0.72rem 0.8rem;
-  font: inherit;
-  color: var(--ink);
-  background: #fbfdff;
-  resize: vertical;
-}
-
-.edit-field-full {
-  grid-column: 1 / -1;
-}
-
-.experience-editor {
-  margin-top: 1rem;
-}
-
-.experience-editor-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 0.75rem;
-  margin-bottom: 0.7rem;
-  font-size: 0.95rem;
-  font-weight: 700;
-  color: #223f59;
-}
-
-.experience-edit-card {
-  border: 1px solid var(--line);
-  border-radius: 14px;
-  padding: 0.9rem;
-  background: #fbfeff;
-  margin-bottom: 0.75rem;
-}
-
-.remove-exp-button {
-  margin-top: 0.7rem;
-}
-
-.edit-actions {
-  display: flex;
-  justify-content: flex-end;
-  gap: 0.6rem;
-  margin-top: 1rem;
-}
-
 .chat-list {
   max-height: 450px;
   overflow-y: auto;
@@ -794,11 +694,6 @@ button:disabled {
   }
 
   .content-grid {
-    grid-template-columns: 1fr;
-  }
-
-  .edit-grid,
-  .experience-edit-grid {
     grid-template-columns: 1fr;
   }
 }

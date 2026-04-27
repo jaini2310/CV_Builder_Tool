@@ -14,105 +14,6 @@
   </div>
 </div>
 
-<div class="action-overlay edit-overlay" *ngIf="isEditingCv">
-  <div class="action-overlay-card edit-overlay-card">
-    <div class="edit-header">
-      <div>
-        <div class="action-overlay-title">Edit CV fields</div>
-        <div class="action-overlay-copy">Update the preview directly without typing a chat prompt.</div>
-      </div>
-      <button type="button" class="edit-close-button" [disabled]="isSavingCv" (click)="closeEditCv()">Close</button>
-    </div>
-
-    <div class="edit-grid">
-      <label class="edit-field">
-        <span>Career objective</span>
-        <textarea [(ngModel)]="editDraft.objectives" rows="2"></textarea>
-      </label>
-      <label class="edit-field">
-        <span>Full name</span>
-        <input type="text" [(ngModel)]="editDraft.name" />
-      </label>
-      <label class="edit-field">
-        <span>Title</span>
-        <input type="text" [(ngModel)]="editDraft.title" />
-      </label>
-      <label class="edit-field">
-        <span>Total IT experience</span>
-        <input type="text" [(ngModel)]="editDraft.total_it_experience" />
-      </label>
-      <label class="edit-field">
-        <span>Contact</span>
-        <input type="text" [(ngModel)]="editDraft.contact" />
-      </label>
-      <label class="edit-field">
-        <span>Location</span>
-        <input type="text" [(ngModel)]="editDraft.location" />
-      </label>
-      <label class="edit-field edit-field-full">
-        <span>Summary</span>
-        <textarea [(ngModel)]="editDraft.summary" rows="4"></textarea>
-      </label>
-      <label class="edit-field">
-        <span>Skills</span>
-        <textarea [(ngModel)]="editDraft.skillsText" rows="4" placeholder="Comma or new line separated"></textarea>
-      </label>
-      <label class="edit-field">
-        <span>Certifications</span>
-        <textarea [(ngModel)]="editDraft.certificationsText" rows="4" placeholder="One per line"></textarea>
-      </label>
-      <label class="edit-field">
-        <span>Achievements</span>
-        <textarea [(ngModel)]="editDraft.achievementsText" rows="4" placeholder="One per line"></textarea>
-      </label>
-      <label class="edit-field">
-        <span>Education</span>
-        <textarea [(ngModel)]="editDraft.educationText" rows="4" placeholder="One per line"></textarea>
-      </label>
-    </div>
-
-    <div class="experience-editor">
-      <div class="experience-editor-header">
-        <span>Experience</span>
-        <button type="button" [disabled]="isSavingCv" (click)="addExperienceDraft()">Add Experience</button>
-      </div>
-      <div class="experience-edit-card" *ngFor="let exp of editDraft.experienceDrafts; let i = index">
-        <div class="experience-edit-grid">
-          <label class="edit-field">
-            <span>Company</span>
-            <input type="text" [(ngModel)]="exp.company" />
-          </label>
-          <label class="edit-field">
-            <span>Role</span>
-            <input type="text" [(ngModel)]="exp.role" />
-          </label>
-          <label class="edit-field">
-            <span>Start date</span>
-            <input type="text" [(ngModel)]="exp.start_date" />
-          </label>
-          <label class="edit-field">
-            <span>End date</span>
-            <input type="text" [(ngModel)]="exp.end_date" />
-          </label>
-          <label class="edit-field edit-field-full">
-            <span>Responsibilities</span>
-            <textarea [(ngModel)]="exp.responsibilitiesText" rows="4" placeholder="One per line"></textarea>
-          </label>
-        </div>
-        <button type="button" class="remove-exp-button" [disabled]="isSavingCv" (click)="removeExperienceDraft(i)">Remove</button>
-      </div>
-    </div>
-
-    <div class="edit-actions">
-      <button type="button" [disabled]="isSavingCv" (click)="closeEditCv()">Cancel</button>
-      <button type="button" class="primary" [disabled]="isSavingCv" (click)="saveEditCv()">
-        <span *ngIf="!isSavingCv">Save Changes</span>
-        <span *ngIf="isSavingCv">Saving...</span>
-      </button>
-    </div>
-  </div>
-</div>
-
 <div class="page-shell" *ngIf="!isPageLoading">
   <header class="masthead">
     <div class="masthead-brand">
@@ -234,10 +135,7 @@
     </section>
 
     <section class="panel">
-      <div class="panel-header">
-        <h2>CV Snapshot</h2>
-        <button type="button" [disabled]="isBusy" (click)="openEditCv()">Edit CV</button>
-      </div>
+      <h2>CV Snapshot</h2>
 
       <div class="selection-block">
         <div class="selection-label">Template</div>

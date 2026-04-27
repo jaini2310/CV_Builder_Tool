@@ -127,49 +127,6 @@ def extract_structured_cv(conversation_text):
         raise ValueError(f"Could not parse JSON from model response:\n{text}")
 
 
-def apply_structured_cv_update(current_structured_cv, user_update_text):
-    system_prompt = """
-    You update an existing CV JSON using the user's latest correction.
-
-    Return strict JSON only with these keys:
-    objectives, name, title, total_it_experience, contact, location, summary, experience, education, skills, certifications, achievements
-
-    Rules:
-    - Treat the user's latest message as an explicit correction or update
-    - Update only the fields the user is changing
-    - Preserve all other existing values exactly as they are
-    - If the user says to edit skills, certifications, achievements, education, or experience, return the corrected field value in full
-    - Return valid JSON only
-    """
-
-    user_prompt = f"""
-    Current structured CV JSON:
-    {json.dumps(current_structured_cv or {}, ensure_ascii=False, indent=2)}
-
-    User update:
-    {user_update_text}
-    """
-
-    response = client.chat.completions.create(
-        model=MODEL,
-        messages=[
-            {"role": "system", "content": system_prompt},
-            {"role": "user", "content": user_prompt},
-        ],
-        temperature=0,
-    )
-
-    text = response.choices[0].message.content.strip()
-
-    try:
-        return json.loads(text)
-    except Exception:
-        match = re.search(r"(\{.*\})", text, re.DOTALL)
-        if match:
-            return json.loads(match.group(1))
-        raise ValueError(f"Could not parse JSON from model response:\n{text}")
-
-
 def transcribe_audio(audio_bytes, filename="speech.wav"):
     if not audio_bytes or len(audio_bytes) < 1024:
         return ""
