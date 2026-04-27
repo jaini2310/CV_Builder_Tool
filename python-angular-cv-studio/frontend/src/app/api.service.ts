@@ -28,6 +28,12 @@ export class ApiService {
     });
   }
 
+  saveCv(structuredCv: StructuredCv): Observable<{ structured_cv: StructuredCv }> {
+    return this.http.post<{ structured_cv: StructuredCv }>("/api/save-cv", {
+      structured_cv: structuredCv || {},
+    });
+  }
+
   importResume(file: File): Observable<{ structured_cv: StructuredCv; next_question: string; file_name: string }> {
     const formData = new FormData();
     formData.append("resume_file", file);

@@ -349,21 +349,23 @@ def _build_postcard_story(cv_data: Dict[str, Any], styles):
     name = cv_data.get("name") or "Candidate Name"
     title = cv_data.get("title") or "Professional Title"
     summary = (cv_data.get("summary") or "").strip() or "Summary pending."
+    profile_photo_bytes = cv_data.get("profile_photo_bytes")
     skills = [str(skill).strip() for skill in cv_data.get("skills", []) if str(skill).strip()]
     certifications = [str(item).strip() for item in cv_data.get("certifications", []) if str(item).strip()]
     achievements = [str(item).strip() for item in cv_data.get("achievements", []) if str(item).strip()]
     education = _flatten_education(cv_data.get("education", []))
     experience = _normalize_experience(cv_data.get("experience", []))
 
-    hero = Table(
-        [[
-            Paragraph(
-                f"<font size='22'><b>{name}</b></font><br/><font size='11'>{title}</font><br/><font size='10'>{cv_data.get('total_it_experience') or ''}</font>",
-                ParagraphStyle("PostcardHero", fontName="Helvetica", fontSize=11, leading=14, textColor=colors.white),
-            )
-        ]],
-        colWidths=[7.0 * inch],
+    hero_copy = Paragraph(
+        f"<font size='22'><b>{name}</b></font><br/><font size='11'>{title}</font><br/><font size='10'>{cv_data.get('total_it_experience') or ''}</font>",
+        ParagraphStyle("PostcardHero", fontName="Helvetica", fontSize=11, leading=14, textColor=colors.white),
     )
+    if profile_photo_bytes:
+        photo = RLImage(BytesIO(profile_photo_bytes), width=0.95 * inch, height=1.12 * inch)
+        photo.hAlign = "RIGHT"
+        hero = Table([[hero_copy, photo]], colWidths=[5.85 * inch, 1.15 * inch])
+    else:
+        hero = Table([[hero_copy]], colWidths=[7.0 * inch])
     hero.setStyle(
         TableStyle(
             [
@@ -372,6 +374,7 @@ def _build_postcard_story(cv_data: Dict[str, Any], styles):
                 ("RIGHTPADDING", (0, 0), (-1, -1), 18),
                 ("TOPPADDING", (0, 0), (-1, -1), 18),
                 ("BOTTOMPADDING", (0, 0), (-1, -1), 18),
+                ("VALIGN", (0, 0), (-1, -1), "MIDDLE"),
             ]
         )
     )

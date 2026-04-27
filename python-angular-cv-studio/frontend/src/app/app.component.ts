@@ -11,6 +11,14 @@ import { ChatMessage, CvTemplateId, ExportFormat, StructuredCv } from "./models"
   templateUrl: "./app.component.html",
 })
 export class AppComponent implements OnInit {
+  private static readonly EMPTY_EXPERIENCE = {
+    company: "",
+    role: "",
+    start_date: "",
+    end_date: "",
+    responsibilitiesText: "",
+  };
+
   messages: ChatMessage[] = [
     {
       role: "assistant",
@@ -25,6 +33,8 @@ export class AppComponent implements OnInit {
   isTranscribingAudio = false;
   isGeneratingCv = false;
   isImportingResume = false;
+  isEditingCv = false;
+  isSavingCv = false;
   chatError = "";
   previewError = "";
   audioNotice = "";
@@ -36,6 +46,7 @@ export class AppComponent implements OnInit {
   isPageLoading = true;
 
   structuredCv: StructuredCv | null = null;
+  editDraft = this.createEmptyEditDraft();
   profilePhotoBase64 = "";
   profilePhotoName = "";
   importedResumeName = "";
@@ -140,7 +151,6 @@ export class AppComponent implements OnInit {
   refreshPreview(): void {
     const conversationText = this.buildConversationText();
     if (!conversationText.trim()) {
-      this.structuredCv = null;
       this.previewError = "";
       this.isBusy = false;
       return;
@@ -184,6 +194,7 @@ export class AppComponent implements OnInit {
     if (!file) {
       return;
     }
+    input.value = "";
 
     this.isBusy = true;
     this.isImportingResume = true;
@@ -227,6 +238,90 @@ export class AppComponent implements OnInit {
   clearPhoto(): void {
     this.profilePhotoBase64 = "";
     this.profilePhotoName = "";
+  }
+
+  openEditCv(): void {
+    const structured = this.structuredCv || {};
+    this.editDraft = {
+      objectives: structured.objectives || "",
+      name: structured.name || "",
+      title: structured.title || "",
+      total_it_experience: structured.total_it_experience || "",
+      contact: structured.contact || "",
+      location: structured.location || "",
+      summary: structured.summary || "",
+      skillsText: (structured.skills || []).join(", "),
+      certificationsText: (structured.certifications || []).join("\n"),
+      achievementsText: (structured.achievements || []).join("\n"),
+      educationText: this.asDisplayList(structured.education || []).join("\n"),
+      experienceDrafts: (structured.experience || []).map((item) => ({
+        company: item.company || "",
+        role: item.role || "",
+        start_date: item.start_date || "",
+        end_date: item.end_date || "",
+        responsibilitiesText: (item.responsibilities || []).join("\n"),
+      })),
+    };
+    if (!this.editDraft.experienceDrafts.length) {
+      this.addExperienceDraft();
+    }
+    this.isEditingCv = true;
+  }
+
+  closeEditCv(): void {
+    this.isEditingCv = false;
+  }
+
+  saveEditCv(): void {
+    const updated: StructuredCv = {
+      ...(this.structuredCv || {}),
+      objectives: this.editDraft.objectives.trim(),
+      name: this.editDraft.name.trim(),
+      title: this.editDraft.title.trim(),
+      total_it_experience: this.editDraft.total_it_experience.trim(),
+      contact: this.editDraft.contact.trim(),
+      location: this.editDraft.location.trim(),
+      summary: this.editDraft.summary.trim(),
+      skills: this.parseDelimitedList(this.editDraft.skillsText),
+      certifications: this.parseLineList(this.editDraft.certificationsText),
+      achievements: this.parseLineList(this.editDraft.achievementsText),
+      education: this.parseLineList(this.editDraft.educationText),
+      experience: this.editDraft.experienceDrafts
+        .map((item) => ({
+          company: item.company.trim(),
+          role: item.role.trim(),
+          start_date: item.start_date.trim(),
+          end_date: item.end_date.trim(),
+          responsibilities: this.parseLineList(item.responsibilitiesText),
+        }))
+        .filter((item) => item.company || item.role || item.start_date || item.end_date || item.responsibilities?.length),
+    };
+    this.isSavingCv = true;
+    this.previewError = "";
+    this.chatError = "";
+
+    this.api.saveCv(updated).subscribe({
+      next: (res) => {
+        this.structuredCv = res.structured_cv;
+        this.isSavingCv = false;
+        this.isEditingCv = false;
+      },
+      error: (err) => {
+        this.previewError = err?.error?.detail || "Could not save CV changes.";
+        this.isSavingCv = false;
+      },
+    });
+  }
+
+  addExperienceDraft(): void {
+    this.editDraft.experienceDrafts.push({ ...AppComponent.EMPTY_EXPERIENCE });
+  }
+
+  removeExperienceDraft(index: number): void {
+    this.editDraft.experienceDrafts.splice(index, 1);
+    if (!this.editDraft.experienceDrafts.length) {
+      this.addExperienceDraft();
+    }
   }
 
   async toggleMicRecording(): Promise<void> {
@@ -451,5 +546,36 @@ export class AppComponent implements OnInit {
     }
     const match = contentDisposition.match(/filename="?([^"]+)"?/i);
     return match?.[1]?.trim() || "";
+  }
+
+  private createEmptyEditDraft() {
+    return {
+      objectives: "",
+      name: "",
+      title: "",
+      total_it_experience: "",
+      contact: "",
+      location: "",
+      summary: "",
+      skillsText: "",
+      certificationsText: "",
+      achievementsText: "",
+      educationText: "",
+      experienceDrafts: [{ ...AppComponent.EMPTY_EXPERIENCE }],
+    };
+  }
+
+  private parseDelimitedList(value: string): string[] {
+    return value
+      .split(/,|\n/)
+      .map((item) => item.trim())
+      .filter((item) => !!item);
+  }
+
+  private parseLineList(value: string): string[] {
+    return value
+      .split("\n")
+      .map((item) => item.trim())
+      .filter((item) => !!item);
   }
 }

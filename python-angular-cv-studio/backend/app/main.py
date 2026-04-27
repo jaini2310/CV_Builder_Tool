@@ -10,7 +10,7 @@ from fastapi import FastAPI, File, HTTPException, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse
 
-from .models import ExtractCvRequest, GenerateCvRequest, NextQuestionRequest
+from .models import ExtractCvRequest, GenerateCvRequest, NextQuestionRequest, SaveCvRequest
 
 # Allow importing reusable business logic from the existing root project.
 ROOT_DIR = Path(__file__).resolve().parents[3]
@@ -18,7 +18,7 @@ if str(ROOT_DIR) not in sys.path:
     sys.path.append(str(ROOT_DIR))
 
 from cv_generator import generate_docx, generate_pdf  # noqa: E402
-from llm_service import extract_structured_cv, get_next_question, transcribe_audio  # noqa: E402
+from llm_service import apply_structured_cv_update, extract_structured_cv, get_next_question, transcribe_audio  # noqa: E402
 from schema import CVSchema  # noqa: E402
 
 app = FastAPI(title="NTT CV Studio API", version="1.0.0")
@@ -60,6 +60,127 @@ def _merge_prefer_extracted(existing, extracted):
     if extracted not in (None, "", [], {}):
         return extracted
     return existing
+
+
+def _get_last_user_text(conversation_text: str) -> str:
+    user_lines = [line.strip() for line in conversation_text.splitlines() if line.strip().lower().startswith("user:")]
+    if not user_lines:
+        return conversation_text.strip()
+    return user_lines[-1].split(":", 1)[-1].strip().lower()
+
+
+def _is_edit_request(text: str) -> bool:
+    return any(token in text for token in ["update", "edit", "change", "replace", "correct", "modify"])
+
+
+FIELD_KEYWORDS = {
+    "objectives": ["objective", "career objective", "goal", "aim"],
+    "name": ["name"],
+    "title": ["title", "role", "designation", "position"],
+    "total_it_experience": ["experience", "years of experience", "it experience"],
+    "contact": ["contact", "email", "phone", "mobile", "linkedin", "website"],
+    "location": ["location", "city", "address"],
+    "summary": ["summary", "profile summary", "about me"],
+    "skills": ["skill", "skills", "tech stack", "technology"],
+    "experience": ["experience", "company", "role", "project", "responsibilit", "employer", "worked"],
+    "education": ["education", "degree", "college", "university", "school", "mca", "btech", "b.e", "bachelor", "master"],
+    "certifications": ["certification", "certifications", "certificate"],
+    "achievements": ["achievement", "achievements", "award"],
+}
+
+
+def _extract_updated_value(text: str) -> str:
+    patterns = [
+        r"\b(?:to|as)\b\s+(.+)$",
+        r":\s*(.+)$",
+        r"\b(?:is|are)\b\s+(.+)$",
+    ]
+    for pattern in patterns:
+        match = re.search(pattern, text, re.IGNORECASE)
+        if match:
+            return match.group(1).strip(" .")
+    return ""
+
+
+def _split_list_values(value: str):
+    if not value:
+        return []
+    parts = re.split(r",|\band\b|/|\|", value, flags=re.IGNORECASE)
+    return [part.strip(" .") for part in parts if part.strip(" .")]
+
+
+def _apply_simple_edit(existing_structured_cv: dict, last_user_text: str):
+    updated = dict(existing_structured_cv or {})
+    value = _extract_updated_value(last_user_text)
+    if not value:
+        return None
+
+    if "name" in last_user_text:
+        updated["name"] = value
+        return updated
+    if any(token in last_user_text for token in ["title", "role", "designation", "position"]):
+        updated["title"] = value
+        return updated
+    if any(token in last_user_text for token in ["years of experience", "it experience", "total experience", "experience"]):
+        if not any(token in last_user_text for token in ["skills", "certification", "achievement", "project", "company", "role and responsibilities"]):
+            updated["total_it_experience"] = value
+            return updated
+    if any(token in last_user_text for token in ["location", "city", "address"]):
+        updated["location"] = value
+        return updated
+    if any(token in last_user_text for token in ["contact", "email", "phone", "mobile", "linkedin", "website"]):
+        updated["contact"] = value
+        return updated
+    if any(token in last_user_text for token in ["summary", "profile summary", "about me"]):
+        updated["summary"] = value
+        return updated
+    if "skill" in last_user_text:
+        updated["skills"] = _split_list_values(value)
+        return updated
+    if "certification" in last_user_text or "certificate" in last_user_text:
+        updated["certifications"] = _split_list_values(value)
+        return updated
+    if "achievement" in last_user_text or "award" in last_user_text:
+        updated["achievements"] = _split_list_values(value)
+        return updated
+
+    return None
+
+
+def _merge_with_edit_awareness(existing: dict, extracted: dict, conversation_text: str):
+    last_user_text = _get_last_user_text(conversation_text)
+    if not _is_edit_request(last_user_text):
+        return _merge_prefer_existing(existing, extracted)
+
+    merged = dict(existing or {})
+    for key in set(existing or {}) | set(extracted or {}):
+        existing_value = (existing or {}).get(key)
+        extracted_value = (extracted or {}).get(key)
+        keywords = FIELD_KEYWORDS.get(key, [])
+        should_overwrite = any(keyword in last_user_text for keyword in keywords)
+
+        if should_overwrite and extracted_value not in (None, "", [], {}):
+            merged[key] = extracted_value
+        else:
+            merged[key] = _merge_prefer_existing(existing_value, extracted_value)
+    return merged
+
+
+def _resolve_structured_cv(conversation_text: str, existing_structured_cv: dict):
+    existing_structured_cv = existing_structured_cv or {}
+    last_user_text = _get_last_user_text(conversation_text)
+
+    if _is_edit_request(last_user_text) and existing_structured_cv:
+        simple_updated = _apply_simple_edit(existing_structured_cv, last_user_text)
+        if simple_updated is not None:
+            return CVSchema.model_validate(simple_updated).model_dump()
+
+        updated = apply_structured_cv_update(existing_structured_cv, last_user_text)
+        return CVSchema.model_validate(updated).model_dump()
+
+    extracted = extract_structured_cv(conversation_text)
+    extracted_structured = CVSchema.model_validate(extracted).model_dump()
+    return _merge_with_edit_awareness(existing_structured_cv, extracted_structured, conversation_text)
 
 
 def _extract_text_from_docx_bytes(data: bytes) -> str:
@@ -115,9 +236,16 @@ def api_extract_cv(payload: ExtractCvRequest):
         return {"structured_cv": payload.structured_cv or None}
 
     try:
-        extracted = extract_structured_cv(payload.conversation_text)
-        extracted_structured = CVSchema.model_validate(extracted).model_dump()
-        structured = _merge_prefer_extracted(payload.structured_cv or {}, extracted_structured)
+        structured = _resolve_structured_cv(payload.conversation_text, payload.structured_cv or {})
+        return {"structured_cv": structured}
+    except Exception as exc:
+        raise HTTPException(status_code=500, detail=str(exc)) from exc
+
+
+@app.post("/api/save-cv")
+def api_save_cv(payload: SaveCvRequest):
+    try:
+        structured = CVSchema.model_validate(payload.structured_cv or {}).model_dump()
         return {"structured_cv": structured}
     except Exception as exc:
         raise HTTPException(status_code=500, detail=str(exc)) from exc
@@ -168,9 +296,7 @@ def api_generate_cv(payload: GenerateCvRequest):
     try:
         structured = payload.structured_cv or {}
         if payload.conversation_text.strip():
-            extracted = extract_structured_cv(payload.conversation_text)
-            extracted_structured = CVSchema.model_validate(extracted).model_dump()
-            structured = _merge_prefer_existing(structured, extracted_structured)
+            structured = _resolve_structured_cv(payload.conversation_text, structured)
 
         cv = CVSchema.model_validate(structured)
         validated = cv.model_dump()

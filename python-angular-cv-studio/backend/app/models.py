@@ -27,3 +27,7 @@ class GenerateCvRequest(BaseModel):
     file_name: Optional[str] = None
     export_format: str = "pdf"
     template_id: str = "custom"
+
+
+class SaveCvRequest(BaseModel):
+    structured_cv: Dict[str, Any] = Field(default_factory=dict)
