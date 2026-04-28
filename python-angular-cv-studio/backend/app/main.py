@@ -10,7 +10,7 @@ from fastapi import FastAPI, File, Form, HTTPException, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse
 
-from .models import ExtractCvRequest, GenerateCvRequest, NextQuestionRequest, SaveCvRequest
+from .models import ExtractCvRequest, GenerateCvRequest, NextQuestionRequest, SaveCvRequest, TranslateCvRequest
 
 # Allow importing reusable business logic from the existing root project.
 ROOT_DIR = Path(__file__).resolve().parents[3]
@@ -18,7 +18,7 @@ if str(ROOT_DIR) not in sys.path:
     sys.path.append(str(ROOT_DIR))
 
 from cv_generator import generate_docx, generate_pdf  # noqa: E402
-from llm_service import apply_structured_cv_update, extract_structured_cv, get_next_question, transcribe_audio  # noqa: E402
+from llm_service import apply_structured_cv_update, extract_structured_cv, get_next_question, transcribe_audio, translate_structured_cv  # noqa: E402
 from schema import CVSchema  # noqa: E402
 
 app = FastAPI(title="NTT CV Studio API", version="1.0.0")
@@ -73,6 +73,32 @@ def _is_edit_request(text: str) -> bool:
     return any(token in text for token in ["update", "edit", "change", "replace", "correct", "modify"])
 
 
+SKILLS_FIELD_KEYWORDS = [
+    "skill",
+    "skills",
+    "tech stack",
+    "technology",
+    "technologies",
+    "java",
+    "spring",
+    "spring boot",
+    "hibernate",
+    "rest",
+    "rest api",
+    "microservice",
+    "microservices",
+    "api",
+    "angular",
+    "react",
+    "python",
+    "sql",
+]
+
+
+def _contains_any_keyword(text: str, keywords) -> bool:
+    return any(keyword in text for keyword in keywords)
+
+
 FIELD_KEYWORDS = {
     "objectives": ["objective", "career objective", "goal", "aim"],
     "name": ["name"],
@@ -81,7 +107,7 @@ FIELD_KEYWORDS = {
     "contact": ["contact", "email", "phone", "mobile", "linkedin", "website"],
     "location": ["location", "city", "address"],
     "summary": ["summary", "profile summary", "about me"],
-    "skills": ["skill", "skills", "tech stack", "technology"],
+    "skills": SKILLS_FIELD_KEYWORDS,
     "experience": ["experience", "company", "role", "project", "responsibilit", "employer", "worked"],
     "education": ["education", "degree", "college", "university", "school", "mca", "btech", "b.e", "bachelor", "master"],
     "certifications": ["certification", "certifications", "certificate"],
@@ -122,7 +148,7 @@ def _apply_simple_edit(existing_structured_cv: dict, last_user_text: str):
         updated["title"] = value
         return updated
     if any(token in last_user_text for token in ["years of experience", "it experience", "total experience", "experience"]):
-        if not any(token in last_user_text for token in ["skills", "certification", "achievement", "project", "company", "role and responsibilities"]):
+        if not any(token in last_user_text for token in ["certification", "achievement", "project", "company", "role and responsibilities"]) and not _contains_any_keyword(last_user_text, SKILLS_FIELD_KEYWORDS):
             updated["total_it_experience"] = value
             return updated
     if any(token in last_user_text for token in ["location", "city", "address"]):
@@ -134,7 +160,7 @@ def _apply_simple_edit(existing_structured_cv: dict, last_user_text: str):
     if any(token in last_user_text for token in ["summary", "profile summary", "about me"]):
         updated["summary"] = value
         return updated
-    if "skill" in last_user_text:
+    if _contains_any_keyword(last_user_text, SKILLS_FIELD_KEYWORDS):
         updated["skills"] = _split_list_values(value)
         return updated
     if "certification" in last_user_text or "certificate" in last_user_text:
@@ -157,7 +183,7 @@ def _merge_with_edit_awareness(existing: dict, extracted: dict, conversation_tex
         existing_value = (existing or {}).get(key)
         extracted_value = (extracted or {}).get(key)
         keywords = FIELD_KEYWORDS.get(key, [])
-        should_overwrite = any(keyword in last_user_text for keyword in keywords)
+        should_overwrite = _contains_any_keyword(last_user_text, keywords)
 
         if should_overwrite and extracted_value not in (None, "", [], {}):
             merged[key] = extracted_value
@@ -252,6 +278,17 @@ def api_save_cv(payload: SaveCvRequest):
         raise HTTPException(status_code=500, detail=str(exc)) from exc
 
 
+@app.post("/api/translate-cv")
+def api_translate_cv(payload: TranslateCvRequest):
+    try:
+        structured = CVSchema.model_validate(payload.structured_cv or {}).model_dump()
+        translated = translate_structured_cv(structured, payload.target_language)
+        validated = CVSchema.model_validate(translated).model_dump()
+        return {"structured_cv": validated}
+    except Exception as exc:
+        raise HTTPException(status_code=500, detail=str(exc)) from exc
+
+
 @app.post("/api/import-resume")
 async def api_import_resume(resume_file: UploadFile = File(...), preferred_language: str = Form("English")):
     try:
@@ -303,22 +340,26 @@ def api_generate_cv(payload: GenerateCvRequest):
         cv = CVSchema.model_validate(structured)
         validated = cv.model_dump()
 
+        export_format = (payload.export_format or "pdf").strip().lower()
+        template_id = (payload.template_id or "custom").strip().lower()
+        requested_name = (payload.file_name or "").strip()
+        output_language = (payload.output_language or "English").strip() or "English"
+
+        if not payload.skip_translation:
+            validated = CVSchema.model_validate(translate_structured_cv(validated, output_language)).model_dump()
+
         if payload.profile_photo_base64:
             validated["profile_photo_bytes"] = base64.b64decode(payload.profile_photo_base64)
         else:
             validated["profile_photo_bytes"] = b""
 
-        export_format = (payload.export_format or "pdf").strip().lower()
-        template_id = (payload.template_id or "custom").strip().lower()
-        requested_name = (payload.file_name or "").strip()
-
         if export_format == "docx":
             output_name = requested_name if requested_name else None
-            output_path = generate_docx(validated, output_name or "generated_cv.docx", template_id=template_id)
+            output_path = generate_docx(validated, output_name or "generated_cv.docx", template_id=template_id, output_language=output_language)
             media_type = "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
         else:
             output_name = requested_name if requested_name else None
-            output_path = generate_pdf(validated, output_name, template_id=template_id)
+            output_path = generate_pdf(validated, output_name, template_id=template_id, output_language=output_language)
             media_type = "application/pdf"
 
         filename = os.path.basename(output_path)

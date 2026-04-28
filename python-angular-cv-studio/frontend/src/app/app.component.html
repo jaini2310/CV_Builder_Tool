@@ -298,8 +298,27 @@
         <p class="format-note" *ngIf="selectedExportFormat === 'docx' && selectedTemplate !== 'custom'">{{ t("docxNote") }}</p>
       </div>
 
+      <div class="selection-block">
+        <div class="selection-label">{{ t("selectLanguageToCreateCv") }}</div>
+        <div class="format-toggle">
+          <button
+            type="button"
+            class="format-chip"
+            *ngFor="let option of outputLanguageOptions"
+            [class.active]="selectedOutputLanguage === option.code"
+            (click)="selectedOutputLanguage = option.code; onOutputLanguageChange()"
+          >
+            {{ option.label }}
+          </button>
+        </div>
+        <p class="format-note" *ngIf="isTranslatingPreview">
+          <span class="button-spinner"></span>
+          {{ t("convertingPreview") }}
+        </p>
+      </div>
+
       <div class="actions">
-        <button type="button" [disabled]="isBusy" (click)="refreshPreview()">{{ t("refreshPreview") }}</button>
+        <button type="button" [disabled]="isBusy" (click)="refreshPreview(true)">{{ t("refreshPreview") }}</button>
         <button type="button" class="primary" [disabled]="isBusy" (click)="generateCv()">
           <span class="button-spinner" *ngIf="isGeneratingCv"></span>
           <span>{{ isGeneratingCv ? (t("generating") + " " + selectedExportFormat.toUpperCase() + "...") : (t("generate") + " " + selectedExportFormat.toUpperCase()) }}</span>
@@ -322,44 +341,44 @@
       </div>
 
       <article class="preview-card">
-        <h3>{{ structuredCv?.name || t("candidateNamePending") }}</h3>
-        <p>{{ structuredCv?.title || t("currentTitlePending") }}</p>
-        <p *ngIf="structuredCv?.total_it_experience">{{ t("totalItExperiencePrefix") }} {{ structuredCv?.total_it_experience }}</p>
-        <p>{{ structuredCv?.summary || t("summaryPending") }}</p>
+        <h3>{{ renderedCv?.name || previewT("candidateNamePending") }}</h3>
+        <p>{{ renderedCv?.title || previewT("currentTitlePending") }}</p>
+        <p *ngIf="renderedCv?.total_it_experience">{{ previewT("totalItExperiencePrefix") }} {{ renderedCv?.total_it_experience }}</p>
+        <p>{{ renderedCv?.summary || previewT("summaryPending") }}</p>
       </article>
 
       <article class="preview-card">
-        <h3>{{ t("skills") }}</h3>
+        <h3>{{ previewT("skills") }}</h3>
         <ul>
-          <li *ngFor="let item of (structuredCv?.skills || [])">{{ item }}</li>
+          <li *ngFor="let item of (renderedCv?.skills || [])">{{ item }}</li>
         </ul>
       </article>
 
       <article class="preview-card">
-        <h3>{{ t("achievements") }}</h3>
+        <h3>{{ previewT("achievements") }}</h3>
         <ul>
-          <li *ngFor="let item of (structuredCv?.achievements || [])">{{ item }}</li>
+          <li *ngFor="let item of (renderedCv?.achievements || [])">{{ item }}</li>
         </ul>
       </article>
 
       <article class="preview-card">
-        <h3>{{ t("education") }}</h3>
+        <h3>{{ previewT("education") }}</h3>
         <ul>
-          <li *ngFor="let item of asDisplayList(structuredCv?.education || [])">{{ item }}</li>
+          <li *ngFor="let item of asDisplayList(renderedCv?.education || [])">{{ item }}</li>
         </ul>
       </article>
 
       <article class="preview-card">
-        <h3>{{ t("certifications") }}</h3>
+        <h3>{{ previewT("certifications") }}</h3>
         <ul>
-          <li *ngFor="let item of (structuredCv?.certifications || [])">{{ item }}</li>
+          <li *ngFor="let item of (renderedCv?.certifications || [])">{{ item }}</li>
         </ul>
       </article>
 
       <article class="preview-card">
-        <h3>{{ t("experience") }}</h3>
-        <div class="exp-item" *ngFor="let exp of (structuredCv?.experience || [])">
-          <p><strong>{{ exp.role || t("rolePending") }}</strong> {{ t("at") }} <strong>{{ exp.company || t("companyPending") }}</strong></p>
+        <h3>{{ previewT("experience") }}</h3>
+        <div class="exp-item" *ngFor="let exp of (renderedCv?.experience || [])">
+          <p><strong>{{ exp.role || previewT("rolePending") }}</strong> {{ previewT("at") }} <strong>{{ exp.company || previewT("companyPending") }}</strong></p>
           <p>{{ exp.start_date || "" }} {{ exp.end_date ? " - " + exp.end_date : "" }}</p>
           <ul>
             <li *ngFor="let bullet of (exp.responsibilities || [])">{{ bullet }}</li>

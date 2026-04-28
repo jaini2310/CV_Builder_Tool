@@ -36,6 +36,13 @@ export class ApiService {
     });
   }
 
+  translateCv(structuredCv: StructuredCv, targetLanguage: string): Observable<{ structured_cv: StructuredCv }> {
+    return this.http.post<{ structured_cv: StructuredCv }>("/api/translate-cv", {
+      structured_cv: structuredCv || {},
+      target_language: targetLanguage,
+    });
+  }
+
   importResume(file: File, preferredLanguage: string): Observable<{ structured_cv: StructuredCv; next_question: string; file_name: string }> {
     const formData = new FormData();
     formData.append("resume_file", file);
@@ -57,6 +64,8 @@ export class ApiService {
     file_name?: string;
     export_format: ExportFormat;
     template_id: CvTemplateId;
+    output_language: string;
+    skip_translation?: boolean;
   }): Observable<HttpResponse<Blob>> {
     return this.http.post("/api/generate-cv", payload, {
       responseType: "blob",

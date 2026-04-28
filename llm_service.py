@@ -20,10 +20,22 @@ MODEL = "gpt-4o-mini"   # replace if your enterprise model name is different
 TRANSCRIBE_MODEL = os.getenv("OPENAI_TRANSCRIBE_MODEL", "gpt-4o-mini-transcribe")
 
 
+def _json_safe(value):
+    if isinstance(value, bytes):
+        return ""
+    if isinstance(value, dict):
+        return {str(key): _json_safe(item) for key, item in value.items()}
+    if isinstance(value, list):
+        return [_json_safe(item) for item in value]
+    if isinstance(value, tuple):
+        return [_json_safe(item) for item in value]
+    return value
+
+
 def get_next_question(messages, has_profile_photo=False, photo_offer_made=False, structured_cv=None, preferred_language="English"):
     photo_status = "A profile photo has already been uploaded." if has_profile_photo else "No profile photo has been uploaded yet."
     photo_prompt_status = "The profile photo option has already been offered once." if photo_offer_made else "The profile photo option has not been offered yet."
-    structured_cv = structured_cv or {}
+    structured_cv = _json_safe(structured_cv or {})
     populated_snapshot = {key: value for key, value in structured_cv.items() if value not in ("", [], {}, None)}
     structured_cv_snapshot = json.dumps(populated_snapshot, ensure_ascii=False, indent=2) if populated_snapshot else "No structured CV snapshot is available yet."
 
@@ -84,6 +96,17 @@ def get_next_question(messages, has_profile_photo=False, photo_offer_made=False,
     return response.choices[0].message.content
 
 
+def _parse_json_response(text: str):
+    text = (text or "").strip()
+    try:
+        return json.loads(text)
+    except Exception:
+        match = re.search(r"(\{.*\})", text, re.DOTALL)
+        if match:
+            return json.loads(match.group(1))
+        raise ValueError(f"Could not parse JSON from model response:\n{text}")
+
+
 def extract_structured_cv(conversation_text):
     system_prompt = """
     You are a JSON extractor assistant.
@@ -120,14 +143,7 @@ def extract_structured_cv(conversation_text):
     )
 
     text = response.choices[0].message.content.strip()
-
-    try:
-        return json.loads(text)
-    except Exception:
-        match = re.search(r"(\{.*\})", text, re.DOTALL)
-        if match:
-            return json.loads(match.group(1))
-        raise ValueError(f"Could not parse JSON from model response:\n{text}")
+    return _parse_json_response(text)
 
 
 def apply_structured_cv_update(current_structured_cv, user_update_text):
@@ -148,7 +164,7 @@ def apply_structured_cv_update(current_structured_cv, user_update_text):
 
     user_prompt = f"""
     Current structured CV JSON:
-    {json.dumps(current_structured_cv or {}, ensure_ascii=False, indent=2)}
+    {json.dumps(_json_safe(current_structured_cv or {}), ensure_ascii=False, indent=2)}
 
     User update:
     {user_update_text}
@@ -164,14 +180,45 @@ def apply_structured_cv_update(current_structured_cv, user_update_text):
     )
 
     text = response.choices[0].message.content.strip()
+    return _parse_json_response(text)
 
-    try:
-        return json.loads(text)
-    except Exception:
-        match = re.search(r"(\{.*\})", text, re.DOTALL)
-        if match:
-            return json.loads(match.group(1))
-        raise ValueError(f"Could not parse JSON from model response:\n{text}")
+
+def translate_structured_cv(structured_cv, target_language="English"):
+    if not structured_cv:
+        return {}
+
+    system_prompt = f"""
+    You translate structured CV JSON into {target_language}.
+
+    Return strict JSON only with these keys:
+    objectives, name, title, total_it_experience, contact, location, summary, experience, education, skills, certifications, achievements
+
+    Rules:
+    - Translate all user-facing CV content into natural {target_language}
+    - Preserve the original JSON structure
+    - Keep names, company names, product names, certifications, email addresses, phone numbers, URLs, and LinkedIn handles unchanged unless a direct translation is clearly appropriate
+    - Keep dates and numeric values unchanged
+    - Translate role titles, summaries, objectives, responsibilities, and skill labels where appropriate
+    - education should remain a list, and experience should remain a list of objects with company, role, start_date, end_date, responsibilities
+    - Return valid JSON only
+    """
+
+    user_prompt = f"""
+    Structured CV JSON:
+    {json.dumps(_json_safe(structured_cv or {}), ensure_ascii=False, indent=2)}
+    """
+
+    response = client.chat.completions.create(
+        model=MODEL,
+        messages=[
+            {"role": "system", "content": system_prompt},
+            {"role": "user", "content": user_prompt},
+        ],
+        temperature=0,
+    )
+
+    text = response.choices[0].message.content.strip()
+    return _parse_json_response(text)
 
 
 def transcribe_audio(audio_bytes, filename="speech.wav", language_hint=None):

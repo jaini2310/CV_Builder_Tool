@@ -93,6 +93,8 @@ type TranslationKey =
   | "transcriptAdded"
   | "noClearSpeech"
   | "audioTranscriptionFailed"
+  | "selectLanguageToCreateCv"
+  | "convertingPreview"
   | "customTitle"
   | "customDescription"
   | "postcardTitle"
@@ -104,8 +106,10 @@ const LANGUAGE_OPTIONS: Array<{ code: SupportedLanguage; label: string; apiLabel
   { code: "en", label: "English", apiLabel: "English" },
   { code: "de", label: "Deutsch", apiLabel: "German" },
   { code: "es", label: "Espanol", apiLabel: "Spanish" },
-  { code: "hi", label: "Hindi", apiLabel: "Hindi" },
-];
+  { code: "ja", label: "Japanese", apiLabel: "Japanese" },
+];  
+
+const OUTPUT_LANGUAGE_OPTIONS = LANGUAGE_OPTIONS.filter((option) => ["en", "de", "es"].includes(option.code));
 
 const UI_STRINGS: Record<SupportedLanguage, Record<TranslationKey, string>> = {
   en: {
@@ -197,6 +201,8 @@ const UI_STRINGS: Record<SupportedLanguage, Record<TranslationKey, string>> = {
     transcriptAdded: "Transcript added to the message box.",
     noClearSpeech: "No clear speech was detected. Please try again.",
     audioTranscriptionFailed: "Audio transcription failed.",
+    selectLanguageToCreateCv: "Generate/Review CV In Preferred Language",
+    convertingPreview: "Converting preview to the selected language...",
     customTitle: "Custom",
     customDescription: "Uses the provided NTT DATA resume structure.",
     postcardTitle: "Postcard",
@@ -293,6 +299,8 @@ const UI_STRINGS: Record<SupportedLanguage, Record<TranslationKey, string>> = {
     transcriptAdded: "Das Transkript wurde in das Nachrichtenfeld eingefugt.",
     noClearSpeech: "Keine deutliche Sprache erkannt. Bitte versuchen Sie es erneut.",
     audioTranscriptionFailed: "Die Audiotranskription ist fehlgeschlagen.",
+    selectLanguageToCreateCv: "CV in der bevorzugten Sprache erstellen/anzeigen",
+    convertingPreview: "Die Vorschau wird in die ausgewahlte Sprache umgewandelt...",
     customTitle: "Benutzerdefiniert",
     customDescription: "Verwendet die bereitgestellte NTT-DATA-Lebenslaufstruktur.",
     postcardTitle: "Postkarte",
@@ -389,6 +397,8 @@ const UI_STRINGS: Record<SupportedLanguage, Record<TranslationKey, string>> = {
     transcriptAdded: "La transcripcion se agrego al cuadro de mensaje.",
     noClearSpeech: "No se detecto voz clara. Intente nuevamente.",
     audioTranscriptionFailed: "La transcripcion de audio fallo.",
+    selectLanguageToCreateCv: "Generar/Revisar CV en el idioma preferido",
+    convertingPreview: "Convirtiendo la vista previa al idioma seleccionado...",
     customTitle: "Personalizado",
     customDescription: "Usa la estructura de curriculo de NTT DATA proporcionada.",
     postcardTitle: "Postal",
@@ -485,12 +495,112 @@ const UI_STRINGS: Record<SupportedLanguage, Record<TranslationKey, string>> = {
     transcriptAdded: "Transcript message box mein add kar diya gaya hai.",
     noClearSpeech: "Clear speech detect nahin hui. Dobara try karein.",
     audioTranscriptionFailed: "Audio transcription fail ho gaya.",
+    selectLanguageToCreateCv: "Pasandida language mein CV generate/review karein",
+    convertingPreview: "Preview selected language mein convert ho raha hai...",
     customTitle: "Custom",
     customDescription: "Provided NTT DATA resume structure ka use karta hai.",
     postcardTitle: "Postcard",
     postcardDescription: "Zyada visual, compact, aur card-based summary layout.",
     sampleTitle: "Sample",
     sampleDescription: "General sharing ke liye balanced modern sample layout.",
+  },
+  ja: {
+    initialAssistantMessage: "こんにちは。NTT Data形式のCV作成をお手伝いします。\n\nフルネームを教えてください。",
+    loadingTitle: "CV Studioを読み込み中",
+    loadingCopy: "ワークスペースとテンプレートを準備しています。",
+    reviewingResume: "履歴書を確認しています",
+    reviewingResumeCopy: "内容を抽出し、CVを構造化し、次の質問を準備しています。",
+    editCvFields: "CV項目を編集",
+    editCvCopy: "チャットで指示を入力せずに、プレビューを直接更新できます。",
+    close: "閉じる",
+    careerObjective: "キャリア目標",
+    fullName: "氏名",
+    title: "役職",
+    totalItExperience: "総IT経験年数",
+    contact: "連絡先",
+    location: "所在地",
+    summary: "概要",
+    skills: "スキル",
+    certifications: "認定資格",
+    achievements: "実績",
+    education: "学歴",
+    experience: "職務経験",
+    addExperience: "経験を追加",
+    company: "会社名",
+    role: "役割",
+    startDate: "開始日",
+    endDate: "終了日",
+    responsibilities: "担当業務",
+    remove: "削除",
+    at: "at",
+    onePerLine: "1行に1件",
+    commaOrNewLineSeparated: "カンマまたは改行で区切ってください",
+    cancel: "キャンセル",
+    saveChanges: "変更を保存",
+    saving: "保存中...",
+    siteTitle: "NTT DATA Internal CV Studio",
+    siteSubtitle: "コンサルタントのプロフィールを作成し、構造化された情報を収集し、整った履歴書を出力します。",
+    tagVoice: "音声対応",
+    tagExport: "DOCX + PDF",
+    tagTemplate: "テンプレート対応",
+    language: "言語",
+    profileCompletion: "プロフィール完成度",
+    userResponses: "ユーザー回答数",
+    skillsCaptured: "取得済みスキル",
+    experienceItems: "経験件数",
+    conversationWorkspace: "会話ワークスペース",
+    uploadResume: "既存のCVまたは履歴書をアップロード",
+    chooseResume: "履歴書を選択",
+    resumeSupported: "PDFまたはDOCXに対応",
+    assistantRole: "assistant",
+    userRole: "user",
+    typeYourAnswer: "回答を入力してください",
+    recording: "録音中...",
+    microphone: "マイク",
+    send: "送信",
+    failedToGetNextQuestion: "次の質問を取得できませんでした。",
+    couldNotRefreshPreview: "CVプレビューを更新できませんでした。",
+    resumeImportFailed: "履歴書の取り込みに失敗しました。",
+    resumeReviewedPrefix: "アップロードされた履歴書",
+    resumeReviewedSuffix: " を確認し、利用可能な情報をCVワークスペースに反映しました。",
+    cvSnapshot: "CVプレビュー",
+    editCv: "CVを編集",
+    template: "テンプレート",
+    exportFormat: "出力形式",
+    docxNote: "DOCXは現在、提供されたWordテンプレートを使用します。PostcardとSampleはPDFのみ異なるレイアウトです。",
+    refreshPreview: "プレビューを更新",
+    generate: "生成",
+    generating: "生成中",
+    uploadPhoto: "プロフィール写真をアップロード（任意）",
+    choosePhoto: "写真を選択",
+    photoSupported: "PNGまたはJPGに対応",
+    removePhoto: "写真を削除",
+    candidateNamePending: "候補者名は未入力です",
+    currentTitlePending: "現在の役職は未入力です",
+    totalItExperiencePrefix: "総IT経験年数:",
+    summaryPending: "会話が進むと概要がここに表示されます。",
+    rolePending: "役割未入力",
+    companyPending: "会社名未入力",
+    generatedFileEmpty: "生成されたファイルが空でした。",
+    cvGenerationFailed: "CV生成に失敗しました。",
+    couldNotSaveCvChanges: "CVの変更を保存できませんでした。",
+    connectingMicrophone: "マイクに接続しています...",
+    transcribingAnswer: "回答を文字起こししています...",
+    listeningAnswer: "回答を聞き取っています...",
+    recordingStarted: "録音中...",
+    microphoneCouldNotStart: "マイクを開始できませんでした。ブラウザ権限とデバイスを確認してください。",
+    noSpeechCaptured: "音声を取得できませんでした。もう一度お試しください。",
+    transcriptAdded: "文字起こし結果を入力欄に追加しました。",
+    noClearSpeech: "明確な音声を検出できませんでした。もう一度お試しください。",
+    audioTranscriptionFailed: "音声文字起こしに失敗しました。",
+    selectLanguageToCreateCv: "希望する言語でCVを生成/確認",
+    convertingPreview: "プレビューを選択した言語に変換しています...",
+    customTitle: "Custom",
+    customDescription: "提供されたNTT DATA履歴書構成を使用します。",
+    postcardTitle: "Postcard",
+    postcardDescription: "より視覚的でコンパクトなカード型サマリーレイアウトです。",
+    sampleTitle: "Sample",
+    sampleDescription: "一般共有向けのバランスの取れたモダンなレイアウトです。",
   },
 };
 
@@ -514,7 +624,9 @@ export class AppComponent implements OnInit {
   };
 
   selectedLanguage: SupportedLanguage = "en";
+  selectedOutputLanguage: SupportedLanguage = "en";
   readonly languageOptions = LANGUAGE_OPTIONS;
+  readonly outputLanguageOptions = OUTPUT_LANGUAGE_OPTIONS;
   messages: ChatMessage[] = [
     {
       role: "assistant",
@@ -531,6 +643,7 @@ export class AppComponent implements OnInit {
   isImportingResume = false;
   isEditingCv = false;
   isSavingCv = false;
+  isTranslatingPreview = false;
   chatError = "";
   previewError = "";
   audioNotice = "";
@@ -542,6 +655,8 @@ export class AppComponent implements OnInit {
   isPageLoading = true;
 
   structuredCv: StructuredCv | null = null;
+  previewCv: StructuredCv | null = null;
+  previewCvTranslatedLanguage: SupportedLanguage | null = null;
   editDraft = this.createEmptyEditDraft();
   profilePhotoBase64 = "";
   profilePhotoName = "";
@@ -598,8 +713,16 @@ export class AppComponent implements OnInit {
     return this.languageOptions.find((option) => option.code === this.selectedLanguage)?.apiLabel || "English";
   }
 
+  get selectedOutputLanguageLabel(): string {
+    return this.outputLanguageOptions.find((option) => option.code === this.selectedOutputLanguage)?.apiLabel || "English";
+  }
+
+  get renderedCv(): StructuredCv | null {
+    return this.previewCv || this.structuredCv;
+  }
+
   get hasPreviewContent(): boolean {
-    const structured = this.structuredCv;
+    const structured = this.renderedCv;
     if (!structured) {
       return false;
     }
@@ -643,6 +766,10 @@ export class AppComponent implements OnInit {
     return UI_STRINGS[this.selectedLanguage][key] || UI_STRINGS.en[key] || key;
   }
 
+  previewT(key: TranslationKey): string {
+    return UI_STRINGS[this.selectedOutputLanguage][key] || UI_STRINGS.en[key] || key;
+  }
+
   getTemplateTitle(templateId: CvTemplateId): string {
     if (templateId === "custom") {
       return this.t("customTitle");
@@ -674,6 +801,23 @@ export class AppComponent implements OnInit {
       this.messages[0].role === "assistant"
     ) {
       this.messages = [{ role: "assistant", content: getInitialAssistantMessage(this.selectedLanguage) }];
+    }
+  }
+
+  onOutputLanguageChange(): void {
+    if (!this.structuredCv) {
+      this.previewCv = null;
+      this.previewCvTranslatedLanguage = null;
+      this.isTranslatingPreview = false;
+      return;
+    }
+
+    this.previewError = "";
+    this.isTranslatingPreview = false;
+
+    if (this.previewCvTranslatedLanguage && this.previewCvTranslatedLanguage !== this.selectedOutputLanguage) {
+      this.previewCv = this.structuredCv;
+      this.previewCvTranslatedLanguage = null;
     }
   }
 
@@ -710,19 +854,49 @@ export class AppComponent implements OnInit {
       });
   }
 
-  refreshPreview(): void {
+  refreshPreview(translatePreview = false): void {
     const conversationText = this.buildConversationText();
     if (!conversationText.trim()) {
       this.previewError = "";
+      if (this.structuredCv) {
+        this.previewCv = this.structuredCv;
+        this.previewCvTranslatedLanguage = null;
+        if (translatePreview) {
+          this.syncPreviewCv(
+            () => {
+              this.isBusy = false;
+            },
+            () => {
+              this.isBusy = false;
+            },
+          );
+          return;
+        }
+      }
       this.isBusy = false;
+      this.isTranslatingPreview = false;
       return;
     }
 
     this.api.extractCv(conversationText, this.structuredCv).subscribe({
       next: (res) => {
         this.structuredCv = res.structured_cv;
+        this.previewCv = this.structuredCv;
+        this.previewCvTranslatedLanguage = null;
         this.previewError = "";
+        if (translatePreview) {
+          this.syncPreviewCv(
+            () => {
+              this.isBusy = false;
+            },
+            () => {
+              this.isBusy = false;
+            },
+          );
+          return;
+        }
         this.isBusy = false;
+        this.isTranslatingPreview = false;
       },
       error: (err) => {
         this.previewError = err?.error?.detail || this.t("couldNotRefreshPreview");
@@ -767,6 +941,8 @@ export class AppComponent implements OnInit {
     this.api.importResume(file, this.selectedLanguageLabel).subscribe({
       next: (res) => {
         this.structuredCv = res.structured_cv;
+        this.previewCv = this.structuredCv;
+        this.previewCvTranslatedLanguage = null;
         this.importedResumeName = res.file_name || file.name;
         this.photoOfferMade = false;
         this.messages = [
@@ -788,6 +964,7 @@ export class AppComponent implements OnInit {
         this.latestTranscript = "";
         this.isBusy = false;
         this.isImportingResume = false;
+        this.isTranslatingPreview = false;
       },
       error: (err) => {
         this.chatError = err?.error?.detail || this.t("resumeImportFailed");
@@ -803,7 +980,7 @@ export class AppComponent implements OnInit {
   }
 
   openEditCv(): void {
-    const structured = this.structuredCv || {};
+    const structured = this.renderedCv || this.structuredCv || {};
     this.editDraft = {
       objectives: structured.objectives || "",
       name: structured.name || "",
@@ -835,8 +1012,10 @@ export class AppComponent implements OnInit {
   }
 
   saveEditCv(): void {
+    const baseCv = this.renderedCv || this.structuredCv || {};
+    const editingTranslatedPreview = !!this.previewCv && this.previewCvTranslatedLanguage !== null;
     const updated: StructuredCv = {
-      ...(this.structuredCv || {}),
+      ...baseCv,
       objectives: this.editDraft.objectives.trim(),
       name: this.editDraft.name.trim(),
       title: this.editDraft.title.trim(),
@@ -862,11 +1041,14 @@ export class AppComponent implements OnInit {
     this.previewError = "";
     this.chatError = "";
 
-    this.api.saveCv(updated).subscribe({
-      next: (res) => {
-        this.structuredCv = res.structured_cv;
-        this.isSavingCv = false;
-        this.isEditingCv = false;
+      this.api.saveCv(updated).subscribe({
+        next: (res) => {
+          this.structuredCv = res.structured_cv;
+          this.previewCv = this.structuredCv;
+          this.previewCvTranslatedLanguage = editingTranslatedPreview ? this.selectedOutputLanguage : null;
+          this.isSavingCv = false;
+          this.isEditingCv = false;
+          this.isTranslatingPreview = false;
       },
       error: (err) => {
         this.previewError = err?.error?.detail || this.t("couldNotSaveCvChanges");
@@ -910,7 +1092,10 @@ export class AppComponent implements OnInit {
       return;
     }
 
-    const structured = this.structuredCv || {};
+    const canReuseTranslatedPreview =
+      !!this.previewCv &&
+      this.previewCvTranslatedLanguage === this.selectedOutputLanguage;
+    const structured = (canReuseTranslatedPreview ? this.previewCv : this.structuredCv) || {};
     this.isBusy = true;
     this.isGeneratingCv = true;
     this.chatError = "";
@@ -923,6 +1108,8 @@ export class AppComponent implements OnInit {
         file_name: this.getExportFileName(this.selectedExportFormat),
         export_format: this.selectedExportFormat,
         template_id: this.selectedTemplate,
+        output_language: this.selectedOutputLanguageLabel,
+        skip_translation: canReuseTranslatedPreview,
       })
       .subscribe({
         next: (response) => {
@@ -971,6 +1158,35 @@ export class AppComponent implements OnInit {
         return "";
       })
       .filter((item) => !!item);
+  }
+
+  private syncPreviewCv(onSuccess?: () => void, onError?: () => void): void {
+    const source = this.structuredCv;
+    if (!source) {
+      this.previewCv = null;
+      this.previewCvTranslatedLanguage = null;
+      this.isTranslatingPreview = false;
+      onSuccess?.();
+      return;
+    }
+
+    this.isTranslatingPreview = true;
+    this.api.translateCv(source, this.selectedOutputLanguageLabel).subscribe({
+      next: (res) => {
+        this.previewCv = res.structured_cv;
+        this.previewCvTranslatedLanguage = this.selectedOutputLanguage;
+        this.previewError = "";
+        this.isTranslatingPreview = false;
+        onSuccess?.();
+      },
+      error: (err) => {
+        this.previewCv = source;
+        this.previewCvTranslatedLanguage = null;
+        this.previewError = err?.error?.detail || this.t("couldNotRefreshPreview");
+        this.isTranslatingPreview = false;
+        onError?.();
+      },
+    });
   }
 
   private buildConversationText(): string {

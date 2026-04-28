@@ -28,6 +28,13 @@ class GenerateCvRequest(BaseModel):
     file_name: Optional[str] = None
     export_format: str = "pdf"
     template_id: str = "custom"
+    output_language: str = "English"
+    skip_translation: bool = False
+
+
+class TranslateCvRequest(BaseModel):
+    structured_cv: Dict[str, Any] = Field(default_factory=dict)
+    target_language: str = "English"
 
 
 class SaveCvRequest(BaseModel):
