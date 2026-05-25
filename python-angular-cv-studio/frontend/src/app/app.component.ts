@@ -109,7 +109,7 @@ const LANGUAGE_OPTIONS: Array<{ code: SupportedLanguage; label: string; apiLabel
   { code: "ja", label: "Japanese", apiLabel: "Japanese" },
 ];  
 
-const OUTPUT_LANGUAGE_OPTIONS = LANGUAGE_OPTIONS.filter((option) => ["en", "de", "es"].includes(option.code));
+const OUTPUT_LANGUAGE_OPTIONS = LANGUAGE_OPTIONS;
 
 const UI_STRINGS: Record<SupportedLanguage, Record<TranslationKey, string>> = {
   en: {
@@ -795,12 +795,27 @@ export class AppComponent implements OnInit {
   }
 
   onLanguageChange(): void {
+    const nextOutputLanguage = this.outputLanguageOptions.some((option) => option.code === this.selectedLanguage)
+      ? this.selectedLanguage
+      : this.selectedOutputLanguage;
+    const shouldTranslatePreview =
+      nextOutputLanguage !== this.selectedOutputLanguage ||
+      this.previewCvTranslatedLanguage !== nextOutputLanguage;
+
+    this.selectedOutputLanguage = nextOutputLanguage;
+
     if (
       !this.userResponses &&
       this.messages.length === 1 &&
       this.messages[0].role === "assistant"
     ) {
       this.messages = [{ role: "assistant", content: getInitialAssistantMessage(this.selectedLanguage) }];
+    }
+
+    if (shouldTranslatePreview && (this.structuredCv || this.buildConversationText().trim())) {
+      this.previewError = "";
+      this.isBusy = true;
+      this.refreshPreview(true);
     }
   }
 
